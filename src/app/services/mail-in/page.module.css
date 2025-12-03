@@ -1,0 +1,160 @@
+.container {
+    min-height: 100vh;
+    background-color: #000;
+    color: #fff;
+    padding: 8rem 1rem 4rem;
+    font-family: sans-serif;
+    display: flex;
+    justify-content: center;
+}
+
+.contentWrapper {
+    max-width: 1000px;
+    width: 100%;
+}
+
+.header {
+    text-align: center;
+    margin-bottom: 4rem;
+}
+
+.backLink {
+    color: #a855f7;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: 0.875rem;
+    margin-bottom: 1rem;
+    display: inline-block;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.backLink:hover {
+    color: #c084fc;
+}
+
+.subHeader {
+    color: #a855f7;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: 0.875rem;
+    margin-bottom: 1rem;
+    display: block;
+}
+
+.title {
+    font-size: 3.5rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    background: linear-gradient(to right, #fff, #9ca3af);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    line-height: 1.1;
+}
+
+.description {
+    color: #9ca3af;
+    font-size: 1.25rem;
+    max-width: 700px;
+    margin: 0 auto;
+    line-height: 1.6;
+}
+
+.stepsContainer {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    margin-bottom: 4rem;
+}
+
+@media (min-width: 768px) {
+    .stepsContainer {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+.stepCard {
+    background-color: rgba(17, 24, 39, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 1.5rem;
+    padding: 2rem;
+    transition: all 0.3s ease;
+}
+
+.stepCard:hover {
+    border-color: rgba(168, 85, 247, 0.5);
+    transform: translateY(-4px);
+}
+
+.stepNumber {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #a855f7;
+    margin-bottom: 1rem;
+    display: block;
+}
+
+.stepTitle {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: #fff;
+}
+
+.stepDescription {
+    color: #9ca3af;
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+.ctaSection {
+    background: linear-gradient(to right, rgba(88, 28, 135, 0.2), rgba(30, 58, 138, 0.2));
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 1.5rem;
+    padding: 3rem;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.ctaTitle {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #fff;
+}
+
+.price {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #fff;
+}
+
+.priceNote {
+    font-size: 0.875rem;
+    color: #9ca3af;
+    font-weight: 400;
+    margin-left: 0.5rem;
+}
+
+.button {
+    background-color: #fff;
+    color: #000;
+    padding: 1rem 3rem;
+    border-radius: 9999px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    min-width: 200px;
+    display: inline-block;
+}
+
+.button:hover {
+    background-color: #c084fc;
+    color: #fff;
+    transform: scale(1.05);
+}

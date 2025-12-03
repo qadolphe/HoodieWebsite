@@ -1,0 +1,121 @@
+.container {
+    min-height: 100vh;
+    background-color: #000;
+    color: #fff;
+    padding: 8rem 1rem 4rem;
+    font-family: sans-serif;
+    display: flex;
+    justify-content: center;
+}
+
+.contentWrapper {
+    max-width: 1200px;
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 4rem;
+}
+
+@media (min-width: 768px) {
+    .contentWrapper {
+        grid-template-columns: 1fr 1fr;
+        align-items: center;
+    }
+}
+
+.imageContainer {
+    position: relative;
+    aspect-ratio: 1 / 1;
+    background-color: rgba(17, 24, 39, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 1.5rem;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.productImage {
+    object-fit: cover;
+}
+
+.noImage {
+    color: #4b5563;
+    font-size: 1.25rem;
+}
+
+.detailsContainer {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.backLink {
+    color: #9ca3af;
+    text-decoration: none;
+    margin-bottom: 2rem;
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.875rem;
+    transition: color 0.3s ease;
+}
+
+.backLink:hover {
+    color: #fff;
+}
+
+.title {
+    font-size: 3rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    line-height: 1.1;
+}
+
+.price {
+    font-size: 2rem;
+    color: #d1d5db;
+    margin-bottom: 2rem;
+    font-weight: 500;
+}
+
+.description {
+    color: #9ca3af;
+    font-size: 1.125rem;
+    line-height: 1.7;
+    margin-bottom: 3rem;
+}
+
+.actions {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.addToCartButton {
+    background-color: #fff;
+    color: #000;
+    padding: 1.25rem 2rem;
+    border-radius: 9999px;
+    font-weight: 700;
+    font-size: 1.125rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: 100%;
+}
+
+.addToCartButton:hover {
+    background-color: #c084fc;
+    /* purple-400 */
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px -5px rgba(192, 132, 252, 0.3);
+}
+
+.secureText {
+    text-align: center;
+    color: #6b7280;
+    font-size: 0.875rem;
+}
