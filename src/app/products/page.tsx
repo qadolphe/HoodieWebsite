@@ -10,7 +10,7 @@ import { useProducts } from '@/hooks/useProducts'
 
 export default function ProductsPage() {
     // 2. Use the hook (Pass the slugs you want, or leave empty for all)
-    const { products, loading } = useProducts(['essentials-kit', 'mail-in-service', 'concierge'])
+    const { products, loading } = useProducts(['refill-kit', 'mail-in-service', 'concierge'])
 
     // Observer Logic (Visual Only)
     const [focusedCardId, setFocusedCardId] = useState<string | null>(null)

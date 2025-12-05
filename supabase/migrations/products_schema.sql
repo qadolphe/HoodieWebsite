@@ -74,3 +74,14 @@ values (
   'mail-in-service',
   '/images/mail-in-service.jpg'
 );
+
+-- Insert the Concierge Service
+insert into public.products (name, description, base_price, type, slug, image_url)
+values (
+  'Concierge Service', 
+  'We buy the hoodie and line it for you. Includes a brand new hoodie, custom satin lining, and delivery.', 
+  50.00, 
+  'service', 
+  'concierge',
+  '/images/all-in-one-kit.jpg'
+);

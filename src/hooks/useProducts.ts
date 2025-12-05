@@ -2,11 +2,16 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 
-// Centralize your UI Config here
+// CONFIG: We map specific products to "Marketing Cards" here
 const UI_CONFIG: Record<string, any> = {
-    'essentials-kit': {
+    'refill-kit': {
+        titleOverride: 'DIY Kits',
+        descOverride: 'Everything you need to sew it yourself. Kits include fabric, thread, and guides.',
+
         buttonText: 'Shop Kits',
         linkPrefix: '/products',
+        slugOverride: 'kits',
+
         features: ['Premium Satin Fabric', 'Color-Matched Thread', 'Step-by-Step Guide']
     },
     'mail-in-service': {
@@ -38,25 +43,33 @@ export function useProducts(slugs?: string[]) {
                     .select('*')
                     .order('base_price', { ascending: true })
 
-                // If slugs are provided, filter by them
                 if (slugs && slugs.length > 0) {
                     query = query.in('slug', slugs)
                 }
 
                 const { data, error } = await query
-
                 if (error) throw error
 
-                // Map the UI Config directly into the product object
-                // This makes the data easier to use in your components
                 if (data) {
-                    const enhancedData = data.map(product => ({
-                        ...product,
-                        ui: UI_CONFIG[product.slug] || UI_CONFIG['default'],
-                        displayPrice: product.type === 'kit'
-                            ? `Starting from $${product.base_price}`
-                            : `$${product.base_price}`
-                    }))
+                    const enhancedData = data.map(product => {
+                        const config = UI_CONFIG[product.slug] || UI_CONFIG['default']
+
+                        return {
+                            ...product,
+                            ui: config,
+                            // Apply Text Overrides
+                            name: config.titleOverride || product.name,
+                            description: config.descOverride || product.description,
+
+                            // Apply Slug Override (Fixes the link URL)
+                            slug: config.slugOverride || product.slug,
+
+                            // Format Price
+                            displayPrice: product.type === 'kit'
+                                ? `Starting from $${product.base_price}`
+                                : `$${product.base_price}`
+                        }
+                    })
                     setProducts(enhancedData)
                 }
             } catch (error) {
@@ -67,7 +80,7 @@ export function useProducts(slugs?: string[]) {
         }
 
         fetchProducts()
-    }, [JSON.stringify(slugs)]) // Re-run if slugs array changes
+    }, [JSON.stringify(slugs)])
 
     return { products, loading }
 }
