@@ -4,7 +4,6 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useEffect, useRef, useState } from 'react'
 import styles from './page.module.css'
-import Footer from '@/components/Footer'
 
 const PRODUCTS = [
   {
@@ -176,11 +175,6 @@ export default function Home() {
           ))}
         </div>
       </section>
-
-      {/* Footer inside the container */}
-      <div className={styles.footerSnapWrapper}>
-        <Footer />
-      </div>
     </div>
   )
 }

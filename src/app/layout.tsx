@@ -23,7 +23,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.variable}>
         <Header />
-        <main style={{ minHeight: '100vh', paddingTop: '70px' }}>
+        <main className="min-h-screen pt-[70px]">
           {children}
         </main>
         <Footer />

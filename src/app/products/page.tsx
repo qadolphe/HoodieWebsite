@@ -3,7 +3,6 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { useEffect, useRef, useState } from 'react'
-import Footer from '@/components/Footer'
 import styles from './page.module.css'
 
 const MAIN_OFFERINGS = [
@@ -110,10 +109,6 @@ export default function ProductsPage() {
                         </div>
                     </div>
                 ))}
-            </div>
-
-            <div className={styles.footerSlide}>
-                <Footer />
             </div>
         </div>
     )
