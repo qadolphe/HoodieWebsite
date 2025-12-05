@@ -4,8 +4,8 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useEffect, useRef, useState } from 'react'
 import styles from './page.module.css'
-import { Check } from 'lucide-react'
 import { useProducts } from '@/hooks/useProducts'
+import ProductCard from '@/components/ProductCard'
 
 export default function Home() {
   const { products, loading } = useProducts(['refill-kit', 'mail-in-service', 'concierge'])
@@ -95,71 +95,32 @@ export default function Home() {
         {loading ? (
           <div style={{ color: '#fff', textAlign: 'center' }}>Loading...</div>
         ) : (
-          <div className={styles.cardContainer}>
+          <div className={`${styles.cardContainer} product-card-container`}>
             {products.map((item, index) => {
-
               // --- LOCAL OVERRIDE FOR LANDING PAGE ---
-              // Here we manually rename the "Refill Kit" to "DIY Kits"
-              // so it acts as a generic entry point.
-              let displayTitle = item.name
-              let displayDesc = item.description
-              let displayButton = item.ui.buttonText
-              let displayLink = `${item.ui.linkPrefix}/${item.slug}`
+              let overrideTitle
+              let overrideDescription
+              let overrideButtonText
+              let overrideLink
 
               if (item.slug === 'refill-kit') {
-                displayTitle = 'DIY Kits'
-                displayDesc = 'Everything you need to sew it yourself. Kits include fabric, thread, and guides.'
-                displayButton = 'Shop Kits'
-                displayLink = '/products/kits' // Link to category page
+                overrideTitle = 'DIY Kits'
+                overrideDescription = 'Everything you need to sew it yourself. Kits include fabric, thread, and guides.'
+                overrideButtonText = 'Shop Kits'
+                overrideLink = '/products/kits'
               }
 
               return (
-                <div
+                <ProductCard
                   key={item.id}
-                  ref={(el) => { observerRefs.current[index] = el }}
-                  data-id={item.id}
-                  className={`
-                      ${styles.card} 
-                      ${focusedCardId === item.id ? styles.focused : ''}
-                  `}
-                >
-                  <div className={styles.backgroundImageContainer}>
-                    {item.image_url && (
-                      <Image
-                        src={item.image_url}
-                        alt={item.name}
-                        fill
-                        className={styles.backgroundImage}
-                        quality={90}
-                      />
-                    )}
-                    <div className={styles.gradientOverlay} />
-                  </div>
-
-                  <div className={styles.cardContent}>
-                    <h3 className={styles.cardTitle}>{displayTitle}</h3>
-                    <p className={styles.productDesc}>{displayDesc}</p>
-
-                    <div className={styles.productPrice}>
-                      {item.displayPrice}
-                    </div>
-
-                    <div className={styles.expandedContent}>
-                      <ul className={styles.featureList}>
-                        {item.ui.features.map((feature: string, i: number) => (
-                          <li key={i} className={styles.featureItem}>
-                            <Check size={16} className={styles.checkIcon} />
-                            <span>{feature}</span>
-                          </li>
-                        ))}
-                      </ul>
-
-                      <Link href={displayLink} className={styles.productLink}>
-                        {displayButton}
-                      </Link>
-                    </div>
-                  </div>
-                </div>
+                  product={item}
+                  isActive={focusedCardId === item.id}
+                  innerRef={(el) => { observerRefs.current[index] = el }}
+                  overrideTitle={overrideTitle}
+                  overrideDescription={overrideDescription}
+                  overrideButtonText={overrideButtonText}
+                  overrideLink={overrideLink}
+                />
               )
             })}
           </div>

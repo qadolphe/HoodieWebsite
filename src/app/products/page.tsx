@@ -5,8 +5,9 @@ import Image from 'next/image'
 import { useEffect, useRef, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import styles from './page.module.css'
-import { Check } from 'lucide-react'
 import { useProducts } from '@/hooks/useProducts'
+import ProductCard from '@/components/ProductCard'
+import SkeletonCard from '@/components/SkeletonCard'
 
 export default function ProductsPage() {
     const { products, loading } = useProducts(['refill-kit', 'mail-in-service', 'concierge'])
@@ -40,14 +41,6 @@ export default function ProductsPage() {
         return () => observer.disconnect()
     }, [loading, products])
 
-    const getPriceDisplay = (product: any) => {
-        if (product.type === 'kit') return `Starting from $${product.base_price}`
-        if (product.slug === 'concierge') return `Cost of Hoodie + $${product.base_price}`
-        return `$${product.base_price}`
-    }
-
-    if (loading) return <div className={styles.loadingState}>Loading...</div>
-
     return (
         <div className={styles.container}>
 
@@ -62,74 +55,42 @@ export default function ProductsPage() {
 
             {/* Products Grid Section */}
             <section className={styles.productsSection}>
-                <div className={styles.cardContainer}>
-                    {products.map((item, index) => {
-                        const config = item.ui
+                <div className={`${styles.cardContainer} product-card-container`}>
+                    {loading ? (
+                        <>
+                            <SkeletonCard />
+                            <SkeletonCard />
+                            <SkeletonCard />
+                        </>
+                    ) : (
+                        products.map((item, index) => {
+                            // --- LOCAL OVERRIDE ---
+                            let overrideTitle
+                            let overrideDescription
+                            let overrideButtonText
+                            let overrideLink
 
-                        // --- LOCAL OVERRIDE ---
-                        let displayTitle = item.name
-                        let displayDesc = item.description
-                        let displayButton = config.buttonText
-                        let displayLink = `${config.linkPrefix}/${item.slug}`
+                            if (item.slug === 'refill-kit') {
+                                overrideTitle = 'DIY Kits'
+                                overrideDescription = 'Everything you need to sew it yourself. Kits include fabric, thread, and guides.'
+                                overrideButtonText = 'Shop Kits'
+                                overrideLink = '/products/kits'
+                            }
 
-                        if (item.slug === 'refill-kit') {
-                            displayTitle = 'DIY Kits'
-                            displayDesc = 'Everything you need to sew it yourself. Kits include fabric, thread, and guides.'
-                            displayButton = 'Shop Kits'
-                            displayLink = '/products/kits'
-                        }
-
-                        return (
-                            <div
-                                key={item.id}
-                                ref={(el) => { observerRefs.current[index] = el }}
-                                data-id={item.id}
-                                className={`
-                                    ${styles.card} 
-                                    ${focusedCardId === item.id ? styles.focused : ''}
-                                `}
-                            >
-                                <div className={styles.backgroundImageContainer}>
-                                    {item.image_url && (
-                                        <Image
-                                            src={item.image_url}
-                                            alt={item.name}
-                                            fill
-                                            className={styles.backgroundImage}
-                                            quality={90}
-                                        />
-                                    )}
-                                    <div className={styles.gradientOverlay} />
-                                </div>
-
-                                <div className={styles.cardContent}>
-                                    <h3 className={styles.cardTitle}>{displayTitle}</h3>
-                                    <p className={styles.productDesc}>{displayDesc}</p>
-
-                                    <div className={styles.expandedContent}>
-                                        <ul className={styles.featureList}>
-                                            {config.features.map((feature: string, i: number) => (
-                                                <li key={i} className={styles.featureItem}>
-                                                    <Check size={16} className={styles.checkIcon} />
-                                                    <span>{feature}</span>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                        <div className={styles.productPrice}>
-                                            {getPriceDisplay(item)}
-                                        </div>
-
-                                        <Link
-                                            href={displayLink}
-                                            className={styles.productLink}
-                                        >
-                                            {displayButton}
-                                        </Link>
-                                    </div>
-                                </div>
-                            </div>
-                        )
-                    })}
+                            return (
+                                <ProductCard
+                                    key={item.id}
+                                    product={item}
+                                    isActive={focusedCardId === item.id}
+                                    innerRef={(el) => { observerRefs.current[index] = el }}
+                                    overrideTitle={overrideTitle}
+                                    overrideDescription={overrideDescription}
+                                    overrideButtonText={overrideButtonText}
+                                    overrideLink={overrideLink}
+                                />
+                            )
+                        })
+                    )}
                 </div>
             </section>
         </div>

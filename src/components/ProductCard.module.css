@@ -1,76 +1,4 @@
-/* --- GLOBAL CONTAINER --- */
-.container {
-    min-height: 100vh;
-    width: 100%;
-    /* Dark Gradient Background */
-    background: radial-gradient(circle at top center, #1f2937 0%, #000 100%);
-    color: #fff;
-    font-family: sans-serif;
-    /* Allow natural scrolling */
-    overflow-y: visible;
-    overflow-x: hidden;
-}
-
-.loadingState {
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #9ca3af;
-    background: #000;
-}
-
-/* --- HEADER SECTION --- */
-.headerSection {
-    padding: 8rem 1rem 4rem;
-    /* Top padding clears the fixed navbar */
-    text-align: center;
-    width: 100%;
-}
-
-.subHeader {
-    color: #a855f7;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    font-size: 0.875rem;
-    margin-bottom: 1rem;
-    display: block;
-}
-
-.pageTitle {
-    font-size: 3rem;
-    font-weight: 700;
-    margin-bottom: 1rem;
-    background: linear-gradient(to right, #fff, #9ca3af);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
-.description {
-    color: #9ca3af;
-    font-size: 1.25rem;
-    max-width: 600px;
-    margin: 0 auto;
-}
-
-/* --- PRODUCTS SECTION --- */
-.productsSection {
-    padding: 0 1rem 6rem;
-    /* Bottom padding for footer breathing room */
-    display: flex;
-    justify-content: center;
-}
-
-.cardContainer {
-    display: flex;
-    flex-direction: column;
-    gap: 4rem;
-    width: 100%;
-    max-width: 1200px;
-    margin: 0 auto;
-}
-
-/* --- CARD STYLES (MATCHING LANDING PAGE) --- */
+/* --- CARD STYLES --- */
 .card {
     position: relative;
     width: 100%;
@@ -229,15 +157,6 @@
 
 /* --- DESKTOP OVERRIDES --- */
 @media (min-width: 768px) {
-    .cardContainer {
-        flex-direction: row;
-        /* Horizontal on desktop */
-        gap: 1rem;
-        height: 500px;
-        min-height: auto;
-        padding: 0;
-    }
-
     .card {
         flex: 1;
         height: 100%;
@@ -264,12 +183,49 @@
     }
 
     /* Inactive State: Dim backgrounds */
-    .cardContainer:hover .card:not(:hover) .gradientOverlay {
+    /* Note: This selector relies on the parent container having :hover. 
+       Since we are scoping this to the component, we can't easily target siblings via the parent's hover state 
+       unless we use :global or assume the parent structure. 
+       However, the original CSS used `.cardContainer:hover .card:not(:hover)`.
+       We can't replicate `.cardContainer:hover` from inside the module easily without passing a prop or using global styles.
+       
+       BUT, if we assume the parent will still have a class that triggers this, or if we just omit the "dimming siblings" effect for now to keep it simple.
+       Actually, the "accordion" effect relies on flex-grow. The parent container needs `display: flex`.
+       
+       Let's try to keep the sibling dimming if possible. 
+       The selector `.cardContainer:hover .card:not(:hover)` works if `.cardContainer` is outside.
+       But here we are inside `ProductCard.module.css`.
+       
+       If we want to keep the sibling dimming, we might need to handle it in the parent's CSS or use a global selector.
+       For now, I will include the styles but they might not apply correctly if the parent class isn't matched.
+       
+       Wait, `ProductCard` is just the card. The container is in the page.
+       So the page's CSS should handle the container layout and interactions between cards if possible.
+       
+       However, the user wants to extract the card.
+       
+       Let's put the card-specific styles here. The "sibling dimming" is an interaction between cards.
+       I'll leave the sibling dimming logic out of the component's CSS for a moment, or try to support it.
+       
+       Actually, the best way is to use the `:has` selector or keep the container logic in the parent.
+       But the user wants to remove code repetition.
+       
+       Let's include the basic card styles. The accordion effect (flex-grow) is on the card itself, so that's fine.
+       The sibling dimming (`.cardContainer:hover .card:not(:hover)`) is tricky.
+       
+       I will omit the sibling dimming from the component CSS for now, as it requires knowledge of the parent.
+       OR I can use `:global(.cardContainer):hover .card:not(:hover)` if I knew the parent class name.
+       
+       Let's just stick to the card's own styles.
+    */
+
+    /* Inactive State: Dim backgrounds */
+    :global(.product-card-container):hover .card:not(:hover) .gradientOverlay {
         background: linear-gradient(to bottom, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0.9) 60%, #000 100%);
     }
 
     /* Inactive State: Hide Buttons */
-    .cardContainer:hover .card:not(:hover) .productLink {
+    :global(.product-card-container):hover .card:not(:hover) .productLink {
         opacity: 0;
         transform: translateY(10px);
         pointer-events: none;
