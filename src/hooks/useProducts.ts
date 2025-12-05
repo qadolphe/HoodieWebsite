@@ -1,19 +1,26 @@
-// hooks/useProducts.ts
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 
-// CONFIG: We map specific products to "Marketing Cards" here
+// CONFIG: Map slugs to marketing assets
 const UI_CONFIG: Record<string, any> = {
+    // KITS
     'refill-kit': {
-        titleOverride: 'DIY Kits',
-        descOverride: 'Everything you need to sew it yourself. Kits include fabric, thread, and guides.',
-
-        buttonText: 'Shop Kits',
+        buttonText: 'View Details',
         linkPrefix: '/products',
-        slugOverride: 'kits',
-
+        features: ['Satin Fabric Sheet', 'Pattern Guide', 'Best for Experts']
+    },
+    'essentials-kit': {
+        buttonText: 'View Details',
+        linkPrefix: '/products',
         features: ['Premium Satin Fabric', 'Color-Matched Thread', 'Step-by-Step Guide']
     },
+    'all-in-one-kit': {
+        buttonText: 'View Details',
+        linkPrefix: '/products',
+        features: ['Handheld Sewing Machine', 'Essentials Kit Included', 'Complete Beginner Set']
+    },
+
+    // SERVICES
     'mail-in-service': {
         buttonText: 'Start Service',
         linkPrefix: '/services',
@@ -24,6 +31,8 @@ const UI_CONFIG: Record<string, any> = {
         linkPrefix: '/services',
         features: ['Brand New Hoodie', 'Custom Satin Lining', 'Delivered to Your Door']
     },
+
+    // FALLBACK
     'default': {
         buttonText: 'View Details',
         linkPrefix: '/products',
@@ -57,12 +66,10 @@ export function useProducts(slugs?: string[]) {
                         return {
                             ...product,
                             ui: config,
-                            // Apply Text Overrides
-                            name: config.titleOverride || product.name,
-                            description: config.descOverride || product.description,
-
-                            // Apply Slug Override (Fixes the link URL)
-                            slug: config.slugOverride || product.slug,
+                            // Default to DB data (unless manually overridden in component)
+                            name: product.name,
+                            description: product.description,
+                            slug: product.slug,
 
                             // Format Price
                             displayPrice: product.type === 'kit'

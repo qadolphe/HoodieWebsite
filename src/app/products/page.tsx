@@ -94,6 +94,19 @@ export default function ProductsPage() {
                     {products.map((item, index) => {
                         const config = item.ui
 
+                        // --- LOCAL OVERRIDE ---
+                        let displayTitle = item.name
+                        let displayDesc = item.description
+                        let displayButton = config.buttonText
+                        let displayLink = `${config.linkPrefix}/${item.slug}`
+
+                        if (item.slug === 'refill-kit') {
+                            displayTitle = 'DIY Kits'
+                            displayDesc = 'Everything you need to sew it yourself. Kits include fabric, thread, and guides.'
+                            displayButton = 'Shop Kits'
+                            displayLink = '/products/kits'
+                        }
+
                         return (
                             <div
                                 key={item.id}
@@ -118,8 +131,8 @@ export default function ProductsPage() {
                                 </div>
 
                                 <div className={styles.cardContent}>
-                                    <h3 className={styles.cardTitle}>{item.name}</h3>
-                                    <p className={styles.productDesc}>{item.description}</p>
+                                    <h3 className={styles.cardTitle}>{displayTitle}</h3>
+                                    <p className={styles.productDesc}>{displayDesc}</p>
 
                                     {/* Price - Always Visible */}
                                     <div className={styles.productPrice}>
@@ -136,10 +149,10 @@ export default function ProductsPage() {
                                             ))}
                                         </ul>
                                         <Link
-                                            href={`${config.linkPrefix}/${item.slug}`}
+                                            href={displayLink}
                                             className={styles.productLink}
                                         >
-                                            {config.buttonText}
+                                            {displayButton}
                                         </Link>
                                     </div>
                                 </div>

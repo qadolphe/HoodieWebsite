@@ -1,42 +1,27 @@
 'use client'
 
-import { supabase } from '@/lib/supabase'
-import { Product } from '@/types'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useEffect, useRef, useState } from 'react'
-import Footer from '@/components/Footer'
+import { useProducts } from '@/hooks/useProducts'
 import styles from './page.module.css'
-
-
-async function getProducts() {
-    const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .eq('type', 'kit')
-        .order('base_price', { ascending: true })
-
-    if (error) {
-        console.error('Error fetching products:', error)
-        return []
-    }
-
-    return data as Product[]
-}
+import { Check } from 'lucide-react'
 
 export default function KitsPage() {
-    const [products, setProducts] = useState<Product[]>([])
+    // 1. Fetch the 3 specific kits
+    const { products, loading } = useProducts(['refill-kit', 'essentials-kit', 'all-in-one-kit'])
+
+    // 2. Focus Observer
     const [focusedCardId, setFocusedCardId] = useState<string | null>(null)
     const observerRefs = useRef<(HTMLDivElement | null)[]>([])
 
     useEffect(() => {
-        getProducts().then(setProducts)
-    }, [])
+        if (loading || products.length === 0) return
 
-    useEffect(() => {
         const options = {
             root: null,
-            threshold: 0.4 // Focus when 40% visible
+            rootMargin: '-45% 0px -45% 0px',
+            threshold: 0
         }
 
         const observer = new IntersectionObserver((entries) => {
@@ -47,73 +32,88 @@ export default function KitsPage() {
             })
         }, options)
 
-        observerRefs.current.forEach((ref) => {
-            if (ref) observer.observe(ref)
-        })
+        setTimeout(() => {
+            observerRefs.current.forEach((ref) => {
+                if (ref) observer.observe(ref)
+            })
+        }, 100)
 
         return () => observer.disconnect()
-    }, [products])
+    }, [loading, products])
+
+    if (loading) return <div className={styles.loadingState}>Loading...</div>
 
     return (
         <div className={styles.container}>
 
-            {/* Header Section */}
-            <div className={styles.headerSlide}>
-                <div className={styles.headerContent}>
-                    <Link href="/products" className={styles.backLink}>
-                        ← Back to Shop
-                    </Link>
-                    <h1 className={styles.title}>DIY Kits</h1>
-                    <p className={styles.description}>
-                        Everything you need to upgrade your hoodie.
-                    </p>
-                </div>
-            </div>
+            {/* Header */}
+            <section className={styles.headerSection}>
+                <Link href="/products" className={styles.backLink}>
+                    ← Back to Shop
+                </Link>
+                <h1 className={styles.pageTitle}>DIY Kits</h1>
+                <p className={styles.description}>
+                    Everything you need to upgrade your hoodie yourself.
+                </p>
+            </section>
 
-            {/* Cards Section */}
-            <div className={styles.cardContainer}>
-                {products.map((product, index) => (
-                    <div
-                        key={product.id}
-                        ref={(el) => { observerRefs.current[index] = el }}
-                        data-id={product.id}
-                        className={`
-                            ${styles.card} 
-                            ${focusedCardId === product.id ? styles.focused : ''}
-                        `}
-                    >
-                        <div className={styles.backgroundImageContainer}>
-                            {product.image_url && (
-                                <Image
-                                    src={product.image_url}
-                                    alt={product.name}
-                                    fill
-                                    className={styles.backgroundImage}
-                                    quality={90}
-                                />
-                            )}
-                            <div className={styles.gradientOverlay} />
-                        </div>
+            {/* Cards */}
+            <section className={styles.productsSection}>
+                <div className={styles.cardContainer}>
+                    {products.map((item, index) => (
+                        <div
+                            key={item.id}
+                            ref={(el) => { observerRefs.current[index] = el }}
+                            data-id={item.id}
+                            className={`
+                                ${styles.card} 
+                                ${focusedCardId === item.id ? styles.focused : ''}
+                            `}
+                        >
+                            <div className={styles.backgroundImageContainer}>
+                                {item.image_url && (
+                                    <Image
+                                        src={item.image_url}
+                                        alt={item.name}
+                                        fill
+                                        className={styles.backgroundImage}
+                                        quality={90}
+                                        priority={index === 0}
+                                    />
+                                )}
+                                <div className={styles.gradientOverlay} />
+                            </div>
 
-                        <div className={styles.cardContent}>
-                            <h2 className={styles.cardTitle}>{product.name}</h2>
-                            <p className={styles.cardDescription}>{product.description}</p>
+                            <div className={styles.cardContent}>
+                                <h3 className={styles.cardTitle}>{item.name}</h3>
+                                <p className={styles.productDesc}>{item.description}</p>
 
-                            <div className={styles.expandedContent}>
-                                <span className={styles.price}>${product.base_price}</span>
-                                <Link href={`/products/${product.slug}`} className={styles.button}>
-                                    View Details
-                                </Link>
+                                <div className={styles.productPrice}>
+                                    {/* Kits usually have fixed prices, but we keep the logic consistent */}
+                                    ${item.base_price}
+                                </div>
+
+                                <div className={styles.expandedContent}>
+                                    <ul className={styles.featureList}>
+                                        {item.ui.features.map((feature: string, i: number) => (
+                                            <li key={i} className={styles.featureItem}>
+                                                <Check size={16} className={styles.checkIcon} />
+                                                <span>{feature}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                    <Link
+                                        href={`${item.ui.linkPrefix}/${item.slug}`}
+                                        className={styles.productLink}
+                                    >
+                                        {item.ui.buttonText}
+                                    </Link>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                ))}
-            </div>
-
-            {/* Footer Section */}
-            <div className={styles.footerSlide}>
-                <Footer />
-            </div>
+                    ))}
+                </div>
+            </section>
         </div>
     )
 }
