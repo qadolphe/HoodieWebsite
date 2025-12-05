@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 
-// CONFIG: Map slugs to marketing assets
 const UI_CONFIG: Record<string, any> = {
     // KITS
     'refill-kit': {
@@ -47,6 +46,7 @@ export function useProducts(slugs?: string[]) {
     useEffect(() => {
         async function fetchProducts() {
             try {
+                // 1. Fetch data (Sorted by price by default from DB)
                 let query = supabase
                     .from('products')
                     .select('*')
@@ -60,24 +60,29 @@ export function useProducts(slugs?: string[]) {
                 if (error) throw error
 
                 if (data) {
-                    const enhancedData = data.map(product => {
+                    // 2. ENHANCE the data with UI config
+                    let processedData = data.map(product => {
                         const config = UI_CONFIG[product.slug] || UI_CONFIG['default']
 
                         return {
                             ...product,
                             ui: config,
-                            // Default to DB data (unless manually overridden in component)
                             name: product.name,
                             description: product.description,
                             slug: product.slug,
-
-                            // Format Price
                             displayPrice: product.type === 'kit'
                                 ? `Starting from $${product.base_price}`
                                 : `$${product.base_price}`
                         }
                     })
-                    setProducts(enhancedData)
+
+                    if (slugs && slugs.length > 0) {
+                        processedData = processedData.sort((a, b) => {
+                            return slugs.indexOf(a.slug) - slugs.indexOf(b.slug)
+                        })
+                    }
+
+                    setProducts(processedData)
                 }
             } catch (error) {
                 console.error('Error fetching products:', error)

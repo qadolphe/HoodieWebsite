@@ -9,10 +9,8 @@ import { Check } from 'lucide-react'
 import { useProducts } from '@/hooks/useProducts'
 
 export default function ProductsPage() {
-    // 2. Use the hook (Pass the slugs you want, or leave empty for all)
     const { products, loading } = useProducts(['refill-kit', 'mail-in-service', 'concierge'])
 
-    // Observer Logic (Visual Only)
     const [focusedCardId, setFocusedCardId] = useState<string | null>(null)
     const observerRefs = useRef<(HTMLDivElement | null)[]>([])
 
@@ -42,35 +40,9 @@ export default function ProductsPage() {
         return () => observer.disconnect()
     }, [loading, products])
 
-    useEffect(() => {
-        if (loading || products.length === 0) return
-
-        const options = {
-            root: null,
-            rootMargin: '-45% 0px -45% 0px', // Center line focus
-            threshold: 0
-        }
-
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach((entry) => {
-                if (entry.isIntersecting) {
-                    setFocusedCardId(entry.target.getAttribute('data-id'))
-                }
-            })
-        }, options)
-
-        setTimeout(() => {
-            observerRefs.current.forEach((ref) => {
-                if (ref) observer.observe(ref)
-            })
-        }, 100)
-
-        return () => observer.disconnect()
-    }, [loading, products])
-
-    // Helper: Price Display
     const getPriceDisplay = (product: any) => {
         if (product.type === 'kit') return `Starting from $${product.base_price}`
+        if (product.slug === 'concierge') return `Cost of Hoodie + $${product.base_price}`
         return `$${product.base_price}`
     }
 
@@ -134,11 +106,6 @@ export default function ProductsPage() {
                                     <h3 className={styles.cardTitle}>{displayTitle}</h3>
                                     <p className={styles.productDesc}>{displayDesc}</p>
 
-                                    {/* Price - Always Visible */}
-                                    <div className={styles.productPrice}>
-                                        {getPriceDisplay(item)}
-                                    </div>
-
                                     <div className={styles.expandedContent}>
                                         <ul className={styles.featureList}>
                                             {config.features.map((feature: string, i: number) => (
@@ -148,6 +115,10 @@ export default function ProductsPage() {
                                                 </li>
                                             ))}
                                         </ul>
+                                        <div className={styles.productPrice}>
+                                            {getPriceDisplay(item)}
+                                        </div>
+
                                         <Link
                                             href={displayLink}
                                             className={styles.productLink}

@@ -2,11 +2,13 @@
 .container {
     min-height: 100vh;
     width: 100%;
+    /* Dark Gradient Background */
     background: radial-gradient(circle at top center, #1f2937 0%, #000 100%);
     color: #fff;
     font-family: sans-serif;
-    overflow-x: hidden;
+    /* Allow natural scrolling */
     overflow-y: visible;
+    overflow-x: hidden;
 }
 
 .loadingState {
@@ -21,23 +23,18 @@
 /* --- HEADER SECTION --- */
 .headerSection {
     padding: 8rem 1rem 4rem;
+    /* Top padding clears the fixed navbar */
     text-align: center;
     width: 100%;
 }
 
-.backLink {
+.subHeader {
     color: #a855f7;
     text-transform: uppercase;
     letter-spacing: 0.1em;
     font-size: 0.875rem;
-    margin-bottom: 1.5rem;
-    display: inline-block;
-    text-decoration: none;
-    transition: color 0.3s ease;
-}
-
-.backLink:hover {
-    color: #c084fc;
+    margin-bottom: 1rem;
+    display: block;
 }
 
 .pageTitle {
@@ -59,6 +56,7 @@
 /* --- PRODUCTS SECTION --- */
 .productsSection {
     padding: 0 1rem 6rem;
+    /* Bottom padding for footer breathing room */
     display: flex;
     justify-content: center;
 }
@@ -66,18 +64,22 @@
 .cardContainer {
     display: flex;
     flex-direction: column;
+    /* Stack vertically on mobile */
     gap: 4rem;
     width: 100%;
     max-width: 1200px;
     margin: 0 auto;
 }
 
-/* --- CARD STYLES --- */
+/* --- CARD STYLES (MATCHING LANDING PAGE) --- */
 .card {
     position: relative;
     width: 100%;
+
+    /* Auto height allows content to fit naturally */
     height: auto;
     min-height: 600px;
+
     border-radius: 1.5rem;
     overflow: hidden;
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -88,10 +90,12 @@
     text-align: center;
     padding-bottom: 3rem;
 
+    /* Visual Focus State (Mobile) */
     opacity: 0.5;
     transform: scale(0.98);
     transition: transform 0.5s ease, opacity 0.5s ease, border-color 0.5s ease;
     will-change: transform, opacity;
+
     background-color: rgba(255, 255, 255, 0.03);
 }
 
@@ -130,6 +134,7 @@
     max-width: 300px;
 }
 
+/* Price - Always Visible */
 .productPrice {
     font-size: 1.125rem;
     font-weight: 600;
@@ -227,14 +232,18 @@
 @media (min-width: 768px) {
     .cardContainer {
         flex-direction: row;
+        /* Horizontal on desktop */
         gap: 1rem;
         height: 500px;
         min-height: auto;
+        padding: 0;
     }
 
     .card {
         flex: 1;
         height: 100%;
+        min-height: 100%;
+        /* Reset min-height */
         background-color: rgba(255, 255, 255, 0.03);
         border: 1px solid rgba(255, 255, 255, 0.05);
         padding: 0;
@@ -245,6 +254,7 @@
         will-change: auto;
     }
 
+    /* Hover Interaction (Accordion Effect) */
     .card:hover {
         flex: 3;
         border-color: rgba(168, 85, 247, 0.4);
@@ -254,14 +264,16 @@
         padding: 0 1rem;
     }
 
+    /* Inactive State: Dim backgrounds */
+    .cardContainer:hover .card:not(:hover) .gradientOverlay {
+        background: linear-gradient(to bottom, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0.9) 60%, #000 100%);
+    }
+
+    /* Inactive State: Hide Buttons */
     .cardContainer:hover .card:not(:hover) .productLink {
         opacity: 0;
         transform: translateY(10px);
         pointer-events: none;
-    }
-
-    .cardContainer:hover .card:not(:hover) .gradientOverlay {
-        background: linear-gradient(to bottom, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0.9) 60%, #000 100%);
     }
 
     .card:hover .cardTitle {
@@ -282,4 +294,20 @@
     .card:hover .featureList {
         opacity: 1;
     }
+}
+
+/* --- EXTRA UTILS FOR KITS PAGE --- */
+.backLink {
+    color: #a855f7;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: 0.875rem;
+    margin-bottom: 1.5rem;
+    display: inline-block;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.backLink:hover {
+    color: #c084fc;
 }
