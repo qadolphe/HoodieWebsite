@@ -42,7 +42,8 @@ export default function Home() {
   useEffect(() => {
     const options = {
       root: null,
-      threshold: 0.4 // Focus when 40% visible
+      rootMargin: '-45% 0px -45% 0px',
+      threshold: 0
     }
 
     const observer = new IntersectionObserver((entries) => {
@@ -66,7 +67,7 @@ export default function Home() {
       <section className={styles.hero}>
         <div className={styles.heroBackground}>
           <Image
-            src="/images/essentials-kit.jpg" // Using an existing image as placeholder
+            src="/images/essentials-kit.jpg"
             alt="Satin Lined Hoodie"
             fill
             className={styles.heroImage}
