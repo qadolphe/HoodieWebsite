@@ -3,46 +3,72 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { useEffect, useRef, useState } from 'react'
+import { supabase } from '@/lib/supabase'
 import styles from './page.module.css'
 
-const PRODUCTS = [
-  {
-    id: 'kits',
-    title: 'DIY Kits',
-    description: 'Everything you need to sew it yourself.',
-    image: '/images/essentials-kit.jpg',
-    link: '/products/kits',
+const UI_CONFIG: Record<string, any> = {
+  'essentials-kit': {
     buttonText: 'Shop Kits',
+    linkPrefix: '/products',
     features: ['Premium Satin Fabric', 'Color-Matched Thread', 'Step-by-Step Guide']
   },
-  {
-    id: 'mail-in',
-    title: 'Mail-In Service',
-    description: 'Send us your hoodie, we\'ll do the work.',
-    image: '/images/mail-in-service.jpg',
-    link: '/services/mail-in',
+  'mail-in-service': {
     buttonText: 'Start Service',
+    linkPrefix: '/services',
     features: ['Professional Sewing', '2-Way Shipping Included', 'Fast Turnaround']
   },
-  {
-    id: 'concierge',
-    title: 'Concierge',
-    description: 'We buy the hoodie and line it for you.',
-    image: '/images/all-in-one-kit.jpg',
-    link: '/services/concierge',
+  'all-in-one-kit': {
+    buttonText: 'View Details',
+    linkPrefix: '/products',
+    features: ['Machine Included', 'Complete Beginner Set', 'Free Shipping']
+  },
+  'concierge': {
     buttonText: 'Join Waitlist',
+    linkPrefix: '/services',
     features: ['Brand New Hoodie', 'Custom Satin Lining', 'Delivered to Your Door']
+  },
+  'default': {
+    buttonText: 'View Details',
+    linkPrefix: '/products',
+    features: ['High Quality', 'Satisfaction Guaranteed']
   }
-]
+}
 
 export default function Home() {
+  const [products, setProducts] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
   const [focusedCardId, setFocusedCardId] = useState<string | null>(null)
   const observerRefs = useRef<(HTMLDivElement | null)[]>([])
 
+  // 1. FETCH DATA FROM SUPABASE
   useEffect(() => {
+    async function fetchProducts() {
+      try {
+        const { data, error } = await supabase
+          .from('products')
+          .select('*')
+          // Filter for the specific products you want on the homepage
+          .in('slug', ['essentials-kit', 'mail-in-service', 'concierge'])
+          .order('base_price', { ascending: true })
+
+        if (error) throw error
+        if (data) setProducts(data)
+      } catch (error) {
+        console.error('Error fetching products:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchProducts()
+  }, [])
+
+  // 2. SCROLL OBSERVER (Mobile Focus Logic)
+  useEffect(() => {
+    if (loading || products.length === 0) return
+
     const options = {
       root: null,
-      rootMargin: '-45% 0px -45% 0px',
+      rootMargin: '-45% 0px -45% 0px', // Center line trigger
       threshold: 0
     }
 
@@ -54,16 +80,27 @@ export default function Home() {
       })
     }, options)
 
-    observerRefs.current.forEach((ref) => {
-      if (ref) observer.observe(ref)
-    })
+    // Slight delay to ensure DOM is ready
+    setTimeout(() => {
+      observerRefs.current.forEach((ref) => {
+        if (ref) observer.observe(ref)
+      })
+    }, 100)
 
     return () => observer.disconnect()
-  }, [])
+  }, [loading, products])
+
+  // Helper to format price text
+  const getPriceDisplay = (product: any) => {
+    if (product.type === 'kit') {
+      return `Starting from $${product.base_price}`
+    }
+    return `$${product.base_price}`
+  }
 
   return (
     <div className={styles.container}>
-      {/* Hero Section */}
+      {/* Hero Section (Static) */}
       <section className={styles.hero}>
         <div className={styles.heroBackground}>
           <Image
@@ -97,20 +134,17 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Benefits Section */}
+      {/* Benefits Section (Static) */}
       <section className={styles.benefitsSection}>
         <h2 className={styles.sectionTitle}>Why Satin?</h2>
         <div className={styles.benefitsGrid}>
-          {/* Main Benefit - Large Card */}
           <div className={`${styles.benefitCard} ${styles.largeCard}`}>
             <span className={styles.benefitIcon}>✨</span>
             <h3 className={styles.benefitTitle}>Hair Health</h3>
             <p className={styles.benefitDescription}>
-              Satin reduces friction by up to 90% compared to cotton, preventing breakage, split ends, and frizz while retaining your hair's natural moisture.
+              Satin reduces friction by up to 90% compared to cotton, preventing breakage, split ends, and frizz.
             </p>
           </div>
-
-          {/* Secondary Benefit */}
           <div className={styles.benefitCard}>
             <span className={styles.benefitIcon}>🛡️</span>
             <h3 className={styles.benefitTitle}>Protection</h3>
@@ -118,8 +152,6 @@ export default function Home() {
               Protect your curls, braids, and waves from the harsh texture of standard hoodies.
             </p>
           </div>
-
-          {/* Tertiary Benefit */}
           <div className={styles.benefitCard}>
             <span className={styles.benefitIcon}>💎</span>
             <h3 className={styles.benefitTitle}>Premium Feel</h3>
@@ -130,50 +162,61 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Product Intro Section */}
+      {/* Product Intro Section (Dynamic from Supabase) */}
       <section className={styles.productsSection}>
         <h2 className={styles.sectionTitle}>Choose Your Upgrade</h2>
         <div className={styles.cardContainer}>
-          {PRODUCTS.map((item, index) => (
-            <div
-              key={item.id}
-              ref={(el) => { observerRefs.current[index] = el }}
-              data-id={item.id}
-              className={`
-                        ${styles.card} 
-                        ${focusedCardId === item.id ? styles.focused : ''}
-                    `}
-            >
-              <div className={styles.backgroundImageContainer}>
-                <Image
-                  src={item.image}
-                  alt={item.title}
-                  fill
-                  className={styles.backgroundImage}
-                  quality={90}
-                />
-                <div className={styles.gradientOverlay} />
-              </div>
+          {products.map((item, index) => {
+            const config = UI_CONFIG[item.slug] || UI_CONFIG['default']
 
-              <div className={styles.cardContent}>
-                <h3 className={styles.cardTitle}>{item.title}</h3>
-                <p className={styles.productDesc}>{item.description}</p>
+            return (
+              <div
+                key={item.id}
+                ref={(el) => { observerRefs.current[index] = el }}
+                data-id={item.id}
+                className={`
+                    ${styles.card} 
+                    ${focusedCardId === item.id ? styles.focused : ''}
+                `}
+              >
+                <div className={styles.backgroundImageContainer}>
+                  {item.image_url && (
+                    <Image
+                      src={item.image_url}
+                      alt={item.name}
+                      fill
+                      className={styles.backgroundImage}
+                      quality={90}
+                    />
+                  )}
+                  <div className={styles.gradientOverlay} />
+                </div>
 
-                <div className={styles.expandedContent}>
-                  <ul className={styles.featureList}>
-                    {item.features.map((feature, i) => (
-                      <li key={i} className={styles.featureItem}>
-                        <span className={styles.checkIcon}>✓</span> {feature}
-                      </li>
-                    ))}
-                  </ul>
-                  <Link href={item.link} className={styles.productLink}>
-                    {item.buttonText}
-                  </Link>
+                <div className={styles.cardContent}>
+                  <h3 className={styles.cardTitle}>{item.name}</h3>
+                  <p className={styles.productDesc}>{item.description}</p>
+                  <div className={styles.expandedContent}>
+                    <ul className={styles.featureList}>
+                      {config.features.map((feature: string, i: number) => (
+                        <li key={i} className={styles.featureItem}>
+                          <span className={styles.checkIcon}>✓</span> {feature}
+                        </li>
+                      ))}
+                    </ul>
+                    <div className={styles.productPrice}>
+                      {getPriceDisplay(item)}
+                    </div>
+                    <Link
+                      href={`${config.linkPrefix}/${item.slug}`}
+                      className={styles.productLink}
+                    >
+                      {config.buttonText}
+                    </Link>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       </section>
     </div>

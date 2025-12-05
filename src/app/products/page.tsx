@@ -3,49 +3,28 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { useEffect, useRef, useState } from 'react'
+import { supabase } from '@/lib/supabase'
 import styles from './page.module.css'
-
-const MAIN_OFFERINGS = [
-    {
-        id: 'kits',
-        title: 'DIY Kits',
-        description: 'I have a hoodie, I just need the materials.',
-        price: 'From $24.99',
-        image: '/images/essentials-kit.jpg',
-        link: '/products/kits',
-        buttonText: 'Shop Kits'
-    },
-    {
-        id: 'mail-in',
-        title: 'Mail-In Service',
-        description: 'I have a hoodie, but I want you to sew it.',
-        price: '$45.00',
-        image: '/images/mail-in-service.jpg',
-        link: '/services/mail-in',
-        buttonText: 'Start Service'
-    },
-    {
-        id: 'concierge',
-        title: 'Buy Hoodie + Service',
-        description: "I don't have a hoodie. Buy one for me and line it.",
-        price: 'Cost of Hoodie + $50',
-        image: '/images/all-in-one-kit.jpg',
-        link: '/services/concierge',
-        buttonText: 'Order Custom'
-    }
-]
+import { Check } from 'lucide-react'
+import { useProducts } from '@/hooks/useProducts'
 
 export default function ProductsPage() {
-    // SCROLL STATE (Mobile Only)
+    // 2. Use the hook (Pass the slugs you want, or leave empty for all)
+    const { products, loading } = useProducts(['essentials-kit', 'mail-in-service', 'concierge'])
+
+    // Observer Logic (Visual Only)
     const [focusedCardId, setFocusedCardId] = useState<string | null>(null)
     const observerRefs = useRef<(HTMLDivElement | null)[]>([])
 
-    // JITTER FIX: SCROLL OBSERVER
     useEffect(() => {
+        if (loading || products.length === 0) return
+
         const options = {
             root: null,
-            threshold: 0.4 // 40% visible to trigger focus
+            rootMargin: '-45% 0px -45% 0px',
+            threshold: 0
         }
+
         const observer = new IntersectionObserver((entries) => {
             entries.forEach((entry) => {
                 if (entry.isIntersecting) {
@@ -53,63 +32,122 @@ export default function ProductsPage() {
                 }
             })
         }, options)
-        observerRefs.current.forEach((ref) => {
-            if (ref) observer.observe(ref)
-        })
+
+        setTimeout(() => {
+            observerRefs.current.forEach((ref) => {
+                if (ref) observer.observe(ref)
+            })
+        }, 100)
+
         return () => observer.disconnect()
-    }, [])
+    }, [loading, products])
+
+    useEffect(() => {
+        if (loading || products.length === 0) return
+
+        const options = {
+            root: null,
+            rootMargin: '-45% 0px -45% 0px', // Center line focus
+            threshold: 0
+        }
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                    setFocusedCardId(entry.target.getAttribute('data-id'))
+                }
+            })
+        }, options)
+
+        setTimeout(() => {
+            observerRefs.current.forEach((ref) => {
+                if (ref) observer.observe(ref)
+            })
+        }, 100)
+
+        return () => observer.disconnect()
+    }, [loading, products])
+
+    // Helper: Price Display
+    const getPriceDisplay = (product: any) => {
+        if (product.type === 'kit') return `Starting from $${product.base_price}`
+        return `$${product.base_price}`
+    }
+
+    if (loading) return <div className={styles.loadingState}>Loading...</div>
 
     return (
         <div className={styles.container}>
 
-            <div className={styles.headerSlide}>
-                <div className={styles.headerContent}>
-                    <span className={styles.subHeader}>Choose Your Path</span>
-                    <h1 className={styles.title}>Shop Satin</h1>
-                    <p className={styles.description}>
-                        Whether you want DIY or have it done for you, we've got you covered.
-                    </p>
-                </div>
-            </div>
+            {/* Header Section */}
+            <section className={styles.headerSection}>
+                <span className={styles.subHeader}>Full Catalog</span>
+                <h1 className={styles.pageTitle}>Shop All Options</h1>
+                <p className={styles.description}>
+                    Choose the method that works best for your time and budget.
+                </p>
+            </section>
 
-            <div className={styles.cardContainer}>
-                {MAIN_OFFERINGS.map((item, index) => (
-                    <div
-                        key={item.id}
-                        ref={(el) => { observerRefs.current[index] = el }}
-                        data-id={item.id}
-                        // Only "focused" class is needed for Mobile styling
-                        className={`
-                            ${styles.card} 
-                            ${focusedCardId === item.id ? styles.focused : ''}
-                        `}
-                    >
-                        <div className={styles.backgroundImageContainer}>
-                            <Image
-                                src={item.image}
-                                alt={item.title}
-                                fill
-                                className={styles.backgroundImage}
-                                quality={90}
-                                priority={index === 0}
-                            />
-                            <div className={styles.gradientOverlay} />
-                        </div>
+            {/* Products Grid Section */}
+            <section className={styles.productsSection}>
+                <div className={styles.cardContainer}>
+                    {products.map((item, index) => {
+                        const config = item.ui
 
-                        <div className={styles.cardContent}>
-                            <h2 className={styles.cardTitle}>{item.title}</h2>
-                            <p className={styles.cardDescription}>{item.description}</p>
+                        return (
+                            <div
+                                key={item.id}
+                                ref={(el) => { observerRefs.current[index] = el }}
+                                data-id={item.id}
+                                className={`
+                                    ${styles.card} 
+                                    ${focusedCardId === item.id ? styles.focused : ''}
+                                `}
+                            >
+                                <div className={styles.backgroundImageContainer}>
+                                    {item.image_url && (
+                                        <Image
+                                            src={item.image_url}
+                                            alt={item.name}
+                                            fill
+                                            className={styles.backgroundImage}
+                                            quality={90}
+                                        />
+                                    )}
+                                    <div className={styles.gradientOverlay} />
+                                </div>
 
-                            <div className={styles.expandedContent}>
-                                <span className={styles.price}>{item.price}</span>
-                                <Link href={item.link} className={styles.button}>
-                                    {item.buttonText}
-                                </Link>
+                                <div className={styles.cardContent}>
+                                    <h3 className={styles.cardTitle}>{item.name}</h3>
+                                    <p className={styles.productDesc}>{item.description}</p>
+
+                                    {/* Price - Always Visible */}
+                                    <div className={styles.productPrice}>
+                                        {getPriceDisplay(item)}
+                                    </div>
+
+                                    <div className={styles.expandedContent}>
+                                        <ul className={styles.featureList}>
+                                            {config.features.map((feature: string, i: number) => (
+                                                <li key={i} className={styles.featureItem}>
+                                                    <Check size={16} className={styles.checkIcon} />
+                                                    <span>{feature}</span>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                        <Link
+                                            href={`${config.linkPrefix}/${item.slug}`}
+                                            className={styles.productLink}
+                                        >
+                                            {config.buttonText}
+                                        </Link>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    </div>
-                ))}
-            </div>
+                        )
+                    })}
+                </div>
+            </section>
         </div>
     )
 }

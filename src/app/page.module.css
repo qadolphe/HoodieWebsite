@@ -365,6 +365,18 @@
     max-width: 300px;
 }
 
+.productPrice {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #fbbf24;
+    /* Gold/Amber color for price */
+    margin-bottom: 1rem;
+    letter-spacing: 0.05em;
+    opacity: 1;
+    /* Always visible */
+    transition: all 0.5s ease;
+}
+
 /* --- MOBILE VISIBILITY --- */
 .expandedContent {
     display: flex;
@@ -537,6 +549,18 @@
 
     .card:hover .featureList {
         opacity: 1;
+    }
+
+    /* Ensure Price scales up slightly on hover for effect */
+    .card:hover .productPrice {
+        transform: scale(1.1);
+        color: #fcd34d;
+        /* Lighter gold on hover */
+    }
+
+    /* Keep price visible on inactive cards, just like checkmarks */
+    .card:not(:hover) .productPrice {
+        opacity: 0.9;
     }
 }
 

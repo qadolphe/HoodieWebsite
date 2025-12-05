@@ -2,14 +2,32 @@
 .container {
     min-height: 100vh;
     width: 100%;
+    /* Dark Gradient Background */
     background: radial-gradient(circle at top center, #1f2937 0%, #000 100%);
     color: #fff;
     font-family: sans-serif;
+    /* Allow natural scrolling */
+    overflow-y: visible;
     overflow-x: hidden;
-    overscroll-behavior-y: contain;
 }
 
-/* --- SHARED TYPOGRAPHY --- */
+.loadingState {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #9ca3af;
+    background: #000;
+}
+
+/* --- HEADER SECTION --- */
+.headerSection {
+    padding: 8rem 1rem 4rem;
+    /* Top padding clears the fixed navbar */
+    text-align: center;
+    width: 100%;
+}
+
 .subHeader {
     color: #a855f7;
     text-transform: uppercase;
@@ -19,7 +37,7 @@
     display: block;
 }
 
-.title {
+.pageTitle {
     font-size: 3rem;
     font-weight: 700;
     margin-bottom: 1rem;
@@ -35,179 +53,157 @@
     margin: 0 auto;
 }
 
-/* --- DESKTOP STYLES (Min-width: 768px) --- */
-@media (min-width: 768px) {
-    .headerSlide {
-        padding: 6rem 1rem 4rem;
-        text-align: center;
-    }
-
-    .cardContainer {
-        display: flex;
-        flex-direction: row;
-        gap: 1rem;
-        max-width: 1200px;
-        margin: 0 auto 4rem;
-        padding: 0 1rem;
-        height: 380px;
-    }
-
-    .card {
-        position: relative;
-        flex: 1;
-        /* Default steady state */
-        background-color: rgba(255, 255, 255, 0.03);
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        border-radius: 1.5rem;
-        padding: 0;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        text-align: center;
-        transition: flex 0.6s cubic-bezier(0.25, 1, 0.5, 1);
-        overflow: hidden;
-        cursor: pointer;
-    }
-
-    .card:hover {
-        flex: 3;
-        border-color: rgba(168, 85, 247, 0.4);
-    }
-
-    .cardContent {
-        position: relative;
-        z-index: 10;
-        width: 100%;
-        padding: 0 1.5rem;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        /* NO BLUR HERE */
-    }
-
-    /* TITLE LOGIC: Wrap text naturally */
-    .cardTitle {
-        color: #fff;
-        font-weight: 700;
-        margin-bottom: 0.5rem;
-
-        /* Layout Stability: Always wrap */
-        white-space: normal;
-        line-height: 1.2;
-        font-size: 1.5rem;
-        transition: font-size 0.5s ease;
-    }
-
-    .card:hover .cardTitle {
-        font-size: 2.5rem;
-    }
-
-    /* DESCRIPTION LOGIC */
-    .expandedContent {
-        display: none;
-        opacity: 0;
-        margin-top: 0;
-        /* Layout Stability: Force width to prevent jitter */
-        min-width: 350px;
-        flex-direction: column;
-        align-items: center;
-        gap: 1rem;
-    }
-
-    .card:hover .expandedContent {
-        display: flex;
-        animation: fadeInContent 0.5s forwards;
-        animation-delay: 0.2s;
-    }
-
-    @keyframes fadeInContent {
-        from {
-            opacity: 0;
-            transform: translateY(10px);
-        }
-
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    .footerSlide {
-        margin-top: 4rem;
-    }
+/* --- PRODUCTS SECTION --- */
+.productsSection {
+    padding: 0 1rem 6rem;
+    /* Bottom padding for footer breathing room */
+    display: flex;
+    justify-content: center;
 }
 
-/* --- MOBILE STYLES (Max-width: 767px) --- */
-@media (max-width: 767px) {
-    .headerSlide {
-        padding: 6rem 1rem 3rem;
-        text-align: center;
-    }
-
-    .cardContainer {
-        display: flex;
-        flex-direction: column;
-        gap: 4rem;
-        padding: 0 1.5rem 6rem;
-    }
-
-    .card {
-        position: relative;
-        width: 100%;
-        height: 40vh;
-        min-height: 280px;
-        border-radius: 1.5rem;
-        overflow: hidden;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-
-        display: flex;
-        flex-direction: column;
-        justify-content: flex-end;
-        align-items: center;
-        text-align: center;
-        padding-bottom: 3rem;
-
-        opacity: 0.5;
-        transform: scale(0.98);
-        transition: all 0.5s ease;
-    }
-
-    .card.focused {
-        opacity: 1;
-        transform: scale(1);
-        border-color: rgba(255, 255, 255, 0.4);
-        box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.5);
-    }
-
-    .cardContent {
-        position: relative;
-        z-index: 10;
-        width: 100%;
-        padding: 0 1.5rem;
-    }
-
-    .cardTitle {
-        font-size: 2rem;
-        font-weight: 700;
-        color: #fff;
-        margin-bottom: 0.5rem;
-    }
-
-    .expandedContent {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 1rem;
-        opacity: 1;
-    }
-
-    .footerSlide {
-        padding-bottom: 2rem;
-    }
+.cardContainer {
+    display: flex;
+    flex-direction: column;
+    /* Stack vertically on mobile */
+    gap: 4rem;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
 }
 
-/* --- UTILS --- */
+/* --- CARD STYLES (MATCHING LANDING PAGE) --- */
+.card {
+    position: relative;
+    width: 100%;
+
+    /* Auto height allows content to fit naturally */
+    height: auto;
+    min-height: 600px;
+
+    border-radius: 1.5rem;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+    text-align: center;
+    padding-bottom: 3rem;
+
+    /* Visual Focus State (Mobile) */
+    opacity: 0.5;
+    transform: scale(0.98);
+    transition: transform 0.5s ease, opacity 0.5s ease, border-color 0.5s ease;
+    will-change: transform, opacity;
+
+    background-color: rgba(255, 255, 255, 0.03);
+}
+
+.card.focused {
+    opacity: 1;
+    transform: scale(1);
+    border-color: rgba(255, 255, 255, 0.4);
+    box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.5);
+}
+
+.cardContent {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 1.5rem;
+}
+
+.cardTitle {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 0.5rem;
+    white-space: normal;
+    line-height: 1.1;
+}
+
+.productDesc {
+    color: #e5e7eb;
+    font-size: 1rem;
+    margin-bottom: 1.5rem;
+    line-height: 1.5;
+    width: 100%;
+    max-width: 300px;
+}
+
+/* Price - Always Visible */
+.productPrice {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #fbbf24;
+    margin-bottom: 1rem;
+    letter-spacing: 0.05em;
+    opacity: 1;
+    transition: all 0.5s ease;
+}
+
+/* --- INNER CONTENT --- */
+.expandedContent {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    opacity: 1;
+    margin-top: 1rem;
+    width: 100%;
+}
+
+.productLink {
+    background: #fff;
+    color: #000;
+    padding: 0.8rem 2rem;
+    border-radius: 9999px;
+    font-weight: 700;
+    text-decoration: none;
+    text-transform: uppercase;
+    font-size: 0.9rem;
+    transition: transform 0.2s, background-color 0.2s;
+    display: inline-block;
+    opacity: 1;
+    transform: none;
+    margin-top: 1rem;
+}
+
+.productLink:hover {
+    background-color: #f3f4f6;
+    transform: translateY(-2px);
+}
+
+.featureList {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    text-align: left;
+    color: #d1d5db;
+    font-size: 0.9rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
+    align-items: center;
+}
+
+.featureItem {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: fit-content;
+}
+
+.checkIcon {
+    color: #a855f7;
+    flex-shrink: 0;
+}
+
+/* --- BACKGROUNDS --- */
 .backgroundImageContainer {
     position: absolute;
     inset: 0;
@@ -227,35 +223,75 @@
 .gradientOverlay {
     position: absolute;
     inset: 0;
-    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.6) 50%, rgba(0, 0, 0, 0.95) 100%);
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.7) 50%, #000 100%);
     z-index: 1;
+    transition: background 0.5s ease;
 }
 
-.cardDescription {
-    color: #d1d5db;
-    margin-bottom: 1.5rem;
-    line-height: 1.5;
-}
+/* --- DESKTOP OVERRIDES --- */
+@media (min-width: 768px) {
+    .cardContainer {
+        flex-direction: row;
+        /* Horizontal on desktop */
+        gap: 1rem;
+        height: 500px;
+        min-height: auto;
+        padding: 0;
+    }
 
-.price {
-    font-size: 1.25rem;
-    font-weight: 700;
-    color: #fff;
-}
+    .card {
+        flex: 1;
+        height: 100%;
+        min-height: 100%;
+        /* Reset min-height */
+        background-color: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        padding: 0;
+        justify-content: center;
+        transition: flex 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+        opacity: 1;
+        transform: none;
+        will-change: auto;
+    }
 
-.button {
-    background: #fff;
-    color: #000;
-    padding: 0.8rem 2rem;
-    border-radius: 9999px;
-    font-weight: 700;
-    text-decoration: none;
-    text-transform: uppercase;
-    font-size: 0.9rem;
-    transition: transform 0.2s, background-color 0.2s;
-}
+    /* Hover Interaction (Accordion Effect) */
+    .card:hover {
+        flex: 3;
+        border-color: rgba(168, 85, 247, 0.4);
+    }
 
-.button:hover {
-    background-color: #f3f4f6;
-    transform: translateY(-2px);
+    .cardContent {
+        padding: 0 1rem;
+    }
+
+    /* Inactive State: Dim backgrounds */
+    .cardContainer:hover .card:not(:hover) .gradientOverlay {
+        background: linear-gradient(to bottom, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0.9) 60%, #000 100%);
+    }
+
+    /* Inactive State: Hide Buttons */
+    .cardContainer:hover .card:not(:hover) .productLink {
+        opacity: 0;
+        transform: translateY(10px);
+        pointer-events: none;
+    }
+
+    .card:hover .cardTitle {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .card:hover .productPrice {
+        transform: scale(1.1);
+        color: #fcd34d;
+    }
+
+    .card:not(:hover) .featureList {
+        opacity: 0.8;
+        transition: opacity 0.3s ease;
+    }
+
+    .card:hover .featureList {
+        opacity: 1;
+    }
 }
