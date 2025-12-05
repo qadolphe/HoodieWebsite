@@ -1,6 +1,8 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import styles from './page.module.css'
+import ProductAccordion from '@/components/ProductAccordion'
+import Footer from '@/components/Footer'
 
 export default function Home() {
   return (
@@ -36,11 +38,6 @@ export default function Home() {
               How Mail-In Works
             </Link>
           </div>
-
-          <div className={styles.socialProof}>
-            <span className={styles.stars}>★★★★★</span>
-            <span>Over 500 hoodies upgraded</span>
-          </div>
         </div>
       </section>
 
@@ -48,20 +45,25 @@ export default function Home() {
       <section className={styles.benefitsSection}>
         <h2 className={styles.sectionTitle}>Why Satin?</h2>
         <div className={styles.benefitsGrid}>
-          <div className={styles.benefitCard}>
+          {/* Main Benefit - Large Card */}
+          <div className={`${styles.benefitCard} ${styles.largeCard}`}>
             <span className={styles.benefitIcon}>✨</span>
             <h3 className={styles.benefitTitle}>Hair Health</h3>
             <p className={styles.benefitDescription}>
-              Satin reduces friction, preventing breakage and split ends while keeping your hair moisturized.
+              Satin reduces friction by up to 90% compared to cotton, preventing breakage, split ends, and frizz while retaining your hair's natural moisture.
             </p>
           </div>
+
+          {/* Secondary Benefit */}
           <div className={styles.benefitCard}>
             <span className={styles.benefitIcon}>🛡️</span>
             <h3 className={styles.benefitTitle}>Protection</h3>
             <p className={styles.benefitDescription}>
-              Protect your curls, braids, and waves from the harsh cotton of standard hoodies.
+              Protect your curls, braids, and waves from the harsh texture of standard hoodies.
             </p>
           </div>
+
+          {/* Tertiary Benefit */}
           <div className={styles.benefitCard}>
             <span className={styles.benefitIcon}>💎</span>
             <h3 className={styles.benefitTitle}>Premium Feel</h3>
@@ -76,23 +78,14 @@ export default function Home() {
       <section className={styles.productsSection}>
         <h2 className={styles.sectionTitle}>Choose Your Upgrade</h2>
         <div className={styles.productsGrid}>
-          <div className={styles.productCard}>
-            <h3 className={styles.productTitle}>DIY Kits</h3>
-            <p className={styles.productDesc}>Everything you need to sew it yourself.</p>
-            <Link href="/products/kits" className={styles.productLink}>Shop Kits →</Link>
-          </div>
-          <div className={styles.productCard}>
-            <h3 className={styles.productTitle}>Mail-In Service</h3>
-            <p className={styles.productDesc}>Send us your hoodie, we'll do the work.</p>
-            <Link href="/services/mail-in" className={styles.productLink}>Start Service →</Link>
-          </div>
-          <div className={styles.productCard}>
-            <h3 className={styles.productTitle}>Concierge</h3>
-            <p className={styles.productDesc}>We buy the hoodie and line it for you.</p>
-            <Link href="/services/concierge" className={styles.productLink}>Join Waitlist →</Link>
-          </div>
+          <ProductAccordion />
         </div>
       </section>
+
+      {/* Footer inside the container */}
+      <div className={styles.footerSnapWrapper}>
+        <Footer />
+      </div>
     </div>
   )
 }

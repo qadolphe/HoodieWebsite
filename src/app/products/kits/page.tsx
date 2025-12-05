@@ -5,6 +5,7 @@ import { Product } from '@/types'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useEffect, useRef, useState } from 'react'
+import Footer from '@/components/Footer'
 import styles from './page.module.css'
 
 
@@ -25,8 +26,36 @@ async function getProducts() {
 
 export default function KitsPage() {
     const [products, setProducts] = useState<Product[]>([])
-    const [activeCardId, setActiveCardId] = useState<string | null>(null)
+    const [focusedCardId, setFocusedCardId] = useState<string | null>(null)
     const observerRefs = useRef<(HTMLDivElement | null)[]>([])
+
+    // HOVER STATE (Desktop)
+    const [hoveredCardId, setHoveredCardId] = useState<string | null>(null)
+
+    // MOTION STATE (Tracks if the CSS transition is currently running)
+    const [isAnimating, setIsAnimating] = useState(false)
+    const animationTimeout = useRef<NodeJS.Timeout | null>(null)
+
+    // Trigger the animation timer
+    const triggerAnimation = () => {
+        setIsAnimating(true)
+        if (animationTimeout.current) clearTimeout(animationTimeout.current)
+        // Match this to your CSS transition duration (0.6s)
+        animationTimeout.current = setTimeout(() => {
+            setIsAnimating(false)
+        }, 600)
+    }
+
+    const handleMouseEnter = (id: string) => {
+        if (hoveredCardId === id) return
+        setHoveredCardId(id)
+        triggerAnimation()
+    }
+
+    const handleContainerLeave = () => {
+        setHoveredCardId(null)
+        triggerAnimation()
+    }
 
     useEffect(() => {
         getProducts().then(setProducts)
@@ -35,14 +64,13 @@ export default function KitsPage() {
     useEffect(() => {
         const options = {
             root: null,
-            rootMargin: '-40% 0px -40% 0px',
-            threshold: 0
+            threshold: 0.4 // Focus when 40% visible
         }
 
         const observer = new IntersectionObserver((entries) => {
             entries.forEach((entry) => {
                 if (entry.isIntersecting) {
-                    setActiveCardId(entry.target.getAttribute('data-id'))
+                    setFocusedCardId(entry.target.getAttribute('data-id'))
                 }
             })
         }, options)
@@ -56,8 +84,10 @@ export default function KitsPage() {
 
     return (
         <div className={styles.container}>
-            <div className={styles.contentWrapper}>
-                <div className={styles.header}>
+
+            {/* Header Section */}
+            <div className={styles.headerSlide}>
+                <div className={styles.headerContent}>
                     <Link href="/products" className={styles.backLink}>
                         ← Back to Shop
                     </Link>
@@ -66,45 +96,55 @@ export default function KitsPage() {
                         Everything you need to upgrade your hoodie.
                     </p>
                 </div>
+            </div>
 
-                <div className={styles.cardContainer}>
-                    {products.map((product, index) => (
-                        <div
-                            key={product.id}
-                            ref={(el) => { observerRefs.current[index] = el }}
-                            data-id={product.id}
-                            className={`${styles.card} ${activeCardId === product.id ? styles.active : ''}`}
-                        >
-                            <div className={styles.backgroundImageContainer}>
-                                {product.image_url && (
-                                    <Image
-                                        src={product.image_url}
-                                        alt={product.name}
-                                        fill
-                                        className={styles.backgroundImage}
-                                        quality={90}
-                                    />
-                                )}
-                                <div className={styles.gradientOverlay} />
-                            </div>
+            {/* Cards Section */}
+            <div
+                className={`${styles.cardContainer} ${isAnimating ? styles.animating : ''}`}
+                onMouseLeave={handleContainerLeave}
+            >
+                {products.map((product, index) => (
+                    <div
+                        key={product.id}
+                        ref={(el) => { observerRefs.current[index] = el }}
+                        data-id={product.id}
+                        onMouseEnter={() => handleMouseEnter(product.id)}
+                        className={`
+                            ${styles.card} 
+                            ${focusedCardId === product.id ? styles.focused : ''}
+                        `}
+                    >
+                        <div className={styles.backgroundImageContainer}>
+                            {product.image_url && (
+                                <Image
+                                    src={product.image_url}
+                                    alt={product.name}
+                                    fill
+                                    className={styles.backgroundImage}
+                                    quality={90}
+                                />
+                            )}
+                            <div className={styles.gradientOverlay} />
+                        </div>
 
-                            <div className={styles.cardContent}>
-                                <h2 className={styles.cardTitle}>{product.name}</h2>
-                                <p className={styles.cardDescription}>{product.description}</p>
+                        <div className={styles.cardContent}>
+                            <h2 className={styles.cardTitle}>{product.name}</h2>
+                            <p className={styles.cardDescription}>{product.description}</p>
 
-                                <div className={styles.cardFooter}>
-                                    <div>
-                                        <span className={styles.priceLabel}>Price</span>
-                                        <span className={styles.price}>${product.base_price}</span>
-                                    </div>
-                                    <Link href={`/products/${product.slug}`} className={styles.button}>
-                                        View Details
-                                    </Link>
-                                </div>
+                            <div className={styles.expandedContent}>
+                                <span className={styles.price}>${product.base_price}</span>
+                                <Link href={`/products/${product.slug}`} className={styles.button}>
+                                    View Details
+                                </Link>
                             </div>
                         </div>
-                    ))}
-                </div>
+                    </div>
+                ))}
+            </div>
+
+            {/* Footer Section */}
+            <div className={styles.footerSlide}>
+                <Footer />
             </div>
         </div>
     )

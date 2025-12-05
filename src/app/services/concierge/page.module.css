@@ -1,6 +1,6 @@
 .container {
     min-height: 100vh;
-    background-color: #000;
+    background: radial-gradient(circle at top center, #1f2937 0%, #000 100%);
     color: #fff;
     padding: 8rem 1rem 4rem;
     font-family: sans-serif;
