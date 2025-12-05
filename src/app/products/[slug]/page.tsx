@@ -4,6 +4,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { notFound } from 'next/navigation'
 import styles from './page.module.css'
+import AddToCartButton from '@/components/AddToCartButton'
 
 export const revalidate = 60
 
@@ -67,9 +68,10 @@ export default async function ProductDetailPage({ params }: Props) {
                     </div>
 
                     <div className={styles.actions}>
-                        <button className={styles.addToCartButton}>
-                            Add to Cart
-                        </button>
+                        <AddToCartButton 
+                            product={product} 
+                            className={styles.addToCartButton}
+                        />
                         <p className={styles.secureText}>
                             Secure checkout powered by Stripe
                         </p>

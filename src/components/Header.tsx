@@ -1,7 +1,22 @@
+'use client'
+
 import Link from 'next/link';
 import styles from './Header.module.css';
+import { useCart } from '@/hooks/useCart';
+import { ShoppingBag } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 export default function Header() {
+    const openCart = useCart((state) => state.openCart);
+    const items = useCart((state) => state.items);
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    const itemCount = items.reduce((acc, item) => acc + item.quantity, 0);
+
     return (
         <header className={styles.header}>
             <div className="container">
@@ -17,12 +32,15 @@ export default function Header() {
                     </nav>
 
                     <div className={styles.actions}>
-                        <button className={styles.cartBtn} aria-label="Cart">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <circle cx="9" cy="21" r="1"></circle>
-                                <circle cx="20" cy="21" r="1"></circle>
-                                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
-                            </svg>
+                        <button 
+                            className={styles.cartBtn} 
+                            aria-label="Cart"
+                            onClick={openCart}
+                        >
+                            <ShoppingBag size={24} />
+                            {mounted && itemCount > 0 && (
+                                <span className={styles.badge}>{itemCount}</span>
+                            )}
                         </button>
                     </div>
                 </div>
