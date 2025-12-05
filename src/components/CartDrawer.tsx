@@ -104,9 +104,9 @@ export default function CartDrawer() {
                                                         >
                                                             <Minus size={14} />
                                                         </button>
-                                                        <div className={styles.quantity}>
-                                                            <AnimatedCounter value={item.quantity} />
-                                                        </div>
+                                                        <span className={styles.quantity}>
+                                                            {item.quantity}
+                                                        </span>
                                                         <button
                                                             onClick={() => updateQuantity(item.id, item.quantity + 1)}
                                                             className={styles.qtyBtn}
