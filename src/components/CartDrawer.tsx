@@ -7,6 +7,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import styles from './CartDrawer.module.css'
 import { useEffect } from 'react'
+import AnimatedCounter from './AnimatedCounter'
 
 export default function CartDrawer() {
     const { isOpen, closeCart, items, removeItem, updateQuantity, totalPrice } = useCart()
@@ -58,61 +59,72 @@ export default function CartDrawer() {
                             </div>
                         ) : (
                             <div className={styles.itemsList}>
-                                {items.map((item) => (
-                                    <div key={item.id} className={styles.item}>
-                                        <Link 
-                                            href={`/products/${item.slug}`} 
-                                            className={styles.itemImage}
-                                            onClick={closeCart}
+                                <AnimatePresence initial={false} mode="popLayout">
+                                    {items.map((item) => (
+                                        <motion.div
+                                            key={item.id}
+                                            layout
+                                            initial={{ opacity: 0, scale: 0.9 }}
+                                            animate={{ opacity: 1, scale: 1 }}
+                                            exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
+                                            className={styles.item}
                                         >
-                                            {item.image && (
-                                                <Image
-                                                    src={item.image}
-                                                    alt={item.name}
-                                                    fill
-                                                    style={{ objectFit: 'cover' }}
-                                                />
-                                            )}
-                                        </Link>
-                                        <div className={styles.itemDetails}>
-                                            <div>
-                                                <Link 
-                                                    href={`/products/${item.slug}`}
-                                                    className={styles.itemName}
-                                                    onClick={closeCart}
-                                                >
-                                                    {item.name}
-                                                </Link>
-                                                <p className={styles.itemPrice}>
-                                                    ${(item.price / 100).toFixed(2)}
-                                                </p>
-                                            </div>
-                                            <div className={styles.itemMeta}>
-                                                <div className={styles.quantityControls}>
-                                                    <button 
-                                                        onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                                                        className={styles.qtyBtn}
+                                            <Link
+                                                href={`/products/${item.slug}`}
+                                                className={styles.itemImage}
+                                                onClick={closeCart}
+                                            >
+                                                {item.image && (
+                                                    <Image
+                                                        src={item.image}
+                                                        alt={item.name}
+                                                        fill
+                                                        style={{ objectFit: 'cover' }}
+                                                    />
+                                                )}
+                                            </Link>
+                                            <div className={styles.itemDetails}>
+                                                <div>
+                                                    <Link
+                                                        href={`/products/${item.slug}`}
+                                                        className={styles.itemName}
+                                                        onClick={closeCart}
                                                     >
-                                                        <Minus size={14} />
-                                                    </button>
-                                                    <span className={styles.quantity}>{item.quantity}</span>
-                                                    <button 
-                                                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                                                        className={styles.qtyBtn}
+                                                        {item.name}
+                                                    </Link>
+                                                    <p className={styles.itemPrice}>
+                                                        ${(item.price / 100).toFixed(2)}
+                                                    </p>
+                                                </div>
+                                                <div className={styles.itemMeta}>
+                                                    <div className={styles.quantityControls}>
+                                                        <button
+                                                            onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                                                            className={styles.qtyBtn}
+                                                        >
+                                                            <Minus size={14} />
+                                                        </button>
+                                                        <div className={styles.quantity}>
+                                                            <AnimatedCounter value={item.quantity} />
+                                                        </div>
+                                                        <button
+                                                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                                                            className={styles.qtyBtn}
+                                                        >
+                                                            <Plus size={14} />
+                                                        </button>
+                                                    </div>
+                                                    <button
+                                                        onClick={() => removeItem(item.id)}
+                                                        className={styles.removeBtn}
                                                     >
-                                                        <Plus size={14} />
+                                                        Remove
                                                     </button>
                                                 </div>
-                                                <button
-                                                    onClick={() => removeItem(item.id)}
-                                                    className={styles.removeBtn}
-                                                >
-                                                    Remove
-                                                </button>
                                             </div>
-                                        </div>
-                                    </div>
-                                ))}
+                                        </motion.div>
+                                    ))}
+                                </AnimatePresence>
                             </div>
                         )}
 
@@ -120,7 +132,10 @@ export default function CartDrawer() {
                             <div className={styles.footer}>
                                 <div className={styles.totalRow}>
                                     <span>Total</span>
-                                    <span>${(totalPrice() / 100).toFixed(2)}</span>
+                                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                                        <span>$</span>
+                                        <AnimatedCounter value={totalPrice()} isCurrency />
+                                    </div>
                                 </div>
                                 <button className={styles.checkoutBtn}>
                                     Checkout
