@@ -29,34 +29,6 @@ export default function KitsPage() {
     const [focusedCardId, setFocusedCardId] = useState<string | null>(null)
     const observerRefs = useRef<(HTMLDivElement | null)[]>([])
 
-    // HOVER STATE (Desktop)
-    const [hoveredCardId, setHoveredCardId] = useState<string | null>(null)
-
-    // MOTION STATE (Tracks if the CSS transition is currently running)
-    const [isAnimating, setIsAnimating] = useState(false)
-    const animationTimeout = useRef<NodeJS.Timeout | null>(null)
-
-    // Trigger the animation timer
-    const triggerAnimation = () => {
-        setIsAnimating(true)
-        if (animationTimeout.current) clearTimeout(animationTimeout.current)
-        // Match this to your CSS transition duration (0.6s)
-        animationTimeout.current = setTimeout(() => {
-            setIsAnimating(false)
-        }, 600)
-    }
-
-    const handleMouseEnter = (id: string) => {
-        if (hoveredCardId === id) return
-        setHoveredCardId(id)
-        triggerAnimation()
-    }
-
-    const handleContainerLeave = () => {
-        setHoveredCardId(null)
-        triggerAnimation()
-    }
-
     useEffect(() => {
         getProducts().then(setProducts)
     }, [])
@@ -99,16 +71,12 @@ export default function KitsPage() {
             </div>
 
             {/* Cards Section */}
-            <div
-                className={`${styles.cardContainer} ${isAnimating ? styles.animating : ''}`}
-                onMouseLeave={handleContainerLeave}
-            >
+            <div className={styles.cardContainer}>
                 {products.map((product, index) => (
                     <div
                         key={product.id}
                         ref={(el) => { observerRefs.current[index] = el }}
                         data-id={product.id}
-                        onMouseEnter={() => handleMouseEnter(product.id)}
                         className={`
                             ${styles.card} 
                             ${focusedCardId === product.id ? styles.focused : ''}

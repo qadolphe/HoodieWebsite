@@ -39,34 +39,6 @@ export default function ProductAccordion() {
     const [focusedCardId, setFocusedCardId] = useState<string | null>(null)
     const observerRefs = useRef<(HTMLDivElement | null)[]>([])
 
-    // HOVER STATE (Desktop)
-    const [hoveredCardId, setHoveredCardId] = useState<string | null>(null)
-
-    // MOTION STATE (Tracks if the CSS transition is currently running)
-    const [isAnimating, setIsAnimating] = useState(false)
-    const animationTimeout = useRef<NodeJS.Timeout | null>(null)
-
-    // Trigger the animation timer
-    const triggerAnimation = () => {
-        setIsAnimating(true)
-        if (animationTimeout.current) clearTimeout(animationTimeout.current)
-        // Match this to your CSS transition duration (0.6s)
-        animationTimeout.current = setTimeout(() => {
-            setIsAnimating(false)
-        }, 600)
-    }
-
-    const handleMouseEnter = (id: string) => {
-        if (hoveredCardId === id) return
-        setHoveredCardId(id)
-        triggerAnimation()
-    }
-
-    const handleContainerLeave = () => {
-        setHoveredCardId(null)
-        triggerAnimation()
-    }
-
     useEffect(() => {
         const options = {
             root: null,
@@ -89,16 +61,12 @@ export default function ProductAccordion() {
     }, [])
 
     return (
-        <div
-            className={`${styles.cardContainer} ${isAnimating ? styles.animating : ''}`}
-            onMouseLeave={handleContainerLeave}
-        >
+        <div className={styles.cardContainer}>
             {PRODUCTS.map((item, index) => (
                 <div
                     key={item.id}
                     ref={(el) => { observerRefs.current[index] = el }}
                     data-id={item.id}
-                    onMouseEnter={() => handleMouseEnter(item.id)}
                     className={`
                         ${styles.card} 
                         ${focusedCardId === item.id ? styles.focused : ''}

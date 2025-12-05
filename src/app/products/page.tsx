@@ -37,43 +37,15 @@ const MAIN_OFFERINGS = [
 ]
 
 export default function ProductsPage() {
-    // SCROLL STATE (Mobile)
+    // SCROLL STATE (Mobile Only)
     const [focusedCardId, setFocusedCardId] = useState<string | null>(null)
     const observerRefs = useRef<(HTMLDivElement | null)[]>([])
-
-    // HOVER STATE (Desktop)
-    const [hoveredCardId, setHoveredCardId] = useState<string | null>(null)
-
-    // MOTION STATE (Tracks if the CSS transition is currently running)
-    const [isAnimating, setIsAnimating] = useState(false)
-    const animationTimeout = useRef<NodeJS.Timeout | null>(null)
-
-    // Trigger the animation timer
-    const triggerAnimation = () => {
-        setIsAnimating(true)
-        if (animationTimeout.current) clearTimeout(animationTimeout.current)
-        // Match this to your CSS transition duration (0.6s)
-        animationTimeout.current = setTimeout(() => {
-            setIsAnimating(false)
-        }, 600)
-    }
-
-    const handleMouseEnter = (id: string) => {
-        if (hoveredCardId === id) return
-        setHoveredCardId(id)
-        triggerAnimation()
-    }
-
-    const handleContainerLeave = () => {
-        setHoveredCardId(null)
-        triggerAnimation()
-    }
 
     // JITTER FIX: SCROLL OBSERVER
     useEffect(() => {
         const options = {
             root: null,
-            threshold: 0.4
+            threshold: 0.4 // 40% visible to trigger focus
         }
         const observer = new IntersectionObserver((entries) => {
             entries.forEach((entry) => {
@@ -101,17 +73,13 @@ export default function ProductsPage() {
                 </div>
             </div>
 
-            <div
-                // Apply 'animating' class to container while transition is active
-                className={`${styles.cardContainer} ${isAnimating ? styles.animating : ''}`}
-                onMouseLeave={handleContainerLeave}
-            >
+            <div className={styles.cardContainer}>
                 {MAIN_OFFERINGS.map((item, index) => (
                     <div
                         key={item.id}
                         ref={(el) => { observerRefs.current[index] = el }}
                         data-id={item.id}
-                        onMouseEnter={() => handleMouseEnter(item.id)}
+                        // Only "focused" class is needed for Mobile styling
                         className={`
                             ${styles.card} 
                             ${focusedCardId === item.id ? styles.focused : ''}

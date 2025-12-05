@@ -65,7 +65,6 @@
         align-items: center;
         justify-content: center;
         text-align: center;
-        /* Matches JS timeout (600ms) */
         transition: flex 0.6s cubic-bezier(0.25, 1, 0.5, 1);
         overflow: hidden;
         cursor: pointer;
@@ -76,7 +75,6 @@
         border-color: rgba(168, 85, 247, 0.4);
     }
 
-    /* --- CONTENT BLUR LOGIC --- */
     .cardContent {
         position: relative;
         z-index: 10;
@@ -85,33 +83,16 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-
-        /* 1. Default Steady State: Crystal Clear */
-        filter: blur(0px);
-        opacity: 1;
-        transition: filter 0.4s ease, opacity 0.4s ease;
+        /* NO BLUR HERE */
     }
 
-    /* 2. Motion State: Shrinking Cards (Not Hovered) get blurred */
-    .animating .card:not(:hover) .cardContent {
-        filter: blur(6px);
-        /* Strong blur to hide squish */
-        opacity: 0.7;
-    }
-
-    /* 3. Motion State: Growing Card (Hovered) stays clear */
-    .animating .card:hover .cardContent {
-        filter: blur(0px);
-        opacity: 1;
-    }
-
-    /* --- TEXT LAYOUT STABILITY --- */
+    /* TITLE LOGIC: Wrap text naturally */
     .cardTitle {
         color: #fff;
         font-weight: 700;
         margin-bottom: 0.5rem;
 
-        /* Always wrap text so it never cuts off during resize */
+        /* Layout Stability: Always wrap */
         white-space: normal;
         line-height: 1.2;
         font-size: 1.5rem;
@@ -120,16 +101,14 @@
 
     .card:hover .cardTitle {
         font-size: 2.5rem;
-        /* Optional: prevent wrap only when full size if desired */
-        white-space: normal;
     }
 
+    /* DESCRIPTION LOGIC */
     .expandedContent {
         display: none;
-        /* Hidden when not hovered */
         opacity: 0;
         margin-top: 0;
-        /* Force width so growing card text doesn't reflow wildly */
+        /* Layout Stability: Force width to prevent jitter */
         min-width: 350px;
         flex-direction: column;
         align-items: center;
@@ -140,7 +119,6 @@
         display: flex;
         animation: fadeInContent 0.5s forwards;
         animation-delay: 0.2s;
-        /* Wait until mostly expanded */
     }
 
     @keyframes fadeInContent {
@@ -182,6 +160,7 @@
         border-radius: 1.5rem;
         overflow: hidden;
         border: 1px solid rgba(255, 255, 255, 0.1);
+
         display: flex;
         flex-direction: column;
         justify-content: flex-end;
@@ -201,13 +180,11 @@
         box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.5);
     }
 
-    /* Force Remove Blur on Mobile */
     .cardContent {
         position: relative;
         z-index: 10;
         width: 100%;
         padding: 0 1.5rem;
-        filter: none !important;
     }
 
     .cardTitle {

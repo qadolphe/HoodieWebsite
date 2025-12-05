@@ -34,7 +34,6 @@
         transition: flex 0.6s cubic-bezier(0.25, 1, 0.5, 1);
         overflow: hidden;
         cursor: pointer;
-        will-change: flex;
     }
 
     .card:hover {
@@ -42,7 +41,6 @@
         border-color: rgba(168, 85, 247, 0.4);
     }
 
-    /* --- CONTENT BLUR LOGIC --- */
     .cardContent {
         position: relative;
         z-index: 10;
@@ -51,23 +49,6 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-
-        /* 1. Default Steady State: Crystal Clear */
-        filter: blur(0px);
-        opacity: 1;
-        transition: filter 0.4s ease, opacity 0.4s ease;
-    }
-
-    /* 2. Motion State: Shrinking Cards (Not Hovered) get blurred */
-    .animating .card:not(:hover) .cardContent {
-        filter: blur(6px);
-        opacity: 0.7;
-    }
-
-    /* 3. Motion State: Growing Card (Hovered) stays clear */
-    .animating .card:hover .cardContent {
-        filter: blur(0px);
-        opacity: 1;
     }
 
     .cardTitle {
@@ -82,7 +63,6 @@
 
     .card:hover .cardTitle {
         font-size: 2.5rem;
-        white-space: normal;
     }
 
     .expandedContent {
@@ -147,7 +127,6 @@
         z-index: 10;
         width: 100%;
         padding: 0 1.5rem;
-        filter: none !important;
     }
 
     .cardTitle {
