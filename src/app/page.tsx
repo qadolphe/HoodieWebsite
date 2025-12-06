@@ -60,7 +60,7 @@ export default function Home() {
           <p className={styles.heroSubtitle}>The premium satin lining solution for your favorite hoodies.</p>
           <div className={styles.forkContainer}>
             <Link href="/products/kits" className={styles.primaryButton}>Shop DIY Kits</Link>
-            <Link href="/services/mail-in" className={styles.secondaryButton}>How Mail-In Works</Link>
+            <Link href="/services/mail-in-service" className={styles.secondaryButton}>How Mail-In Works</Link>
           </div>
         </div>
       </section>

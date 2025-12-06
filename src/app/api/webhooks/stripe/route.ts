@@ -31,13 +31,16 @@ export async function POST(req: Request) {
     const orderId = session.metadata?.orderId
 
     if (orderId) {
-      // Update the order with status, payment ID, and the TOTAL AMOUNT charged
+      // Update the order with status, payment ID, total amount, and shipping details
+      const sessionData = session as any
       const { error } = await supabase
         .from('orders')
         .update({ 
           status: 'paid', 
           payment_intent_id: session.payment_intent as string,
-          total_amount: session.amount_total
+          total_amount: session.amount_total,
+          shipping_details: sessionData.shipping_details || sessionData.shipping,
+          customer_email: session.customer_details?.email
         })
         .eq('id', orderId)
 

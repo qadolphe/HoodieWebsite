@@ -8,11 +8,12 @@ create table public.orders (
   stripe_session_id text,
   status text default 'pending', -- 'pending', 'scanned', 'received', 'completed'
   upload_token text unique not null, -- The secret key the App Clip uses
+  total_amount integer, -- Store amount in cents
+  payment_intent_id text,
+  shipping_details jsonb,
+  customer_email text,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
-alter table public.orders 
-add column if not exists total_amount integer, -- Store amount in cents
-add column if not exists payment_intent_id text;
 
 -- 3. Create HOODIE_SCANS Table
 create table public.hoodie_scans (
