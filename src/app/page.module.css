@@ -264,9 +264,10 @@
 }
 
 .benefitDescription {
-    color: #9ca3af;
+    color: #f3f4f6;
     line-height: 1.6;
     font-size: 1rem;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.8);
 }
 
 .largeCard .benefitDescription {
@@ -592,7 +593,7 @@
 .cardOverlay {
     position: absolute;
     inset: 0;
-    background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.1) 100%);
+    background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 40%, rgba(0,0,0,0) 100%);
     z-index: 1;
 }
 
