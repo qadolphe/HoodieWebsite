@@ -17,8 +17,25 @@ export async function POST(req: Request) {
   try {
     const { items, userId, returnUrl } = await req.json()
 
-    // 1. Format items for Stripe
+    // 1. Validate Items & Fetch Real Prices from DB
+    const itemIds = items.map((item: any) => item.id)
+    const { data: dbProducts, error: productError } = await supabase
+      .from('products')
+      .select('id, name, base_price')
+      .in('id', itemIds)
+
+    if (productError || !dbProducts) {
+      throw new Error('Could not validate products')
+    }
+
+    // 2. Format items for Stripe using DB PRICES
     const lineItems = items.map((item: any) => {
+      const dbProduct = dbProducts.find((p) => p.id === item.id)
+      
+      if (!dbProduct) {
+        throw new Error(`Product ${item.name} not found in database`)
+      }
+
       let imageUrl = item.image
       
       // Ensure we have a full URL
@@ -26,8 +43,6 @@ export async function POST(req: Request) {
         imageUrl = `${process.env.NEXT_PUBLIC_URL}${imageUrl}`
       }
 
-      // Stripe requires a publicly accessible URL. Localhost won't work.
-      // If we are on localhost, we skip the image to prevent the error.
       if (imageUrl && imageUrl.includes('localhost')) {
         imageUrl = null
       }
@@ -36,16 +51,17 @@ export async function POST(req: Request) {
         price_data: {
           currency: 'usd',
           product_data: {
-            name: item.name,
+            name: dbProduct.name, // Use DB name to prevent spoofing too
             images: imageUrl ? [imageUrl] : [],
           },
-          unit_amount: item.price, // Amount in cents
+          // SECURE: Use DB price * 100 for cents
+          unit_amount: Math.round(dbProduct.base_price * 100), 
         },
         quantity: item.quantity,
       }
     })
 
-    // 2. Create a "Pending" Order in Supabase BEFORE going to Stripe
+    // 3. Create a "Pending" Order in Supabase BEFORE going to Stripe
     // We generate the secure Upload Token here
     const uploadToken = crypto.randomUUID()
     
@@ -62,7 +78,7 @@ export async function POST(req: Request) {
 
     if (orderError) throw new Error(`DB Error: ${orderError.message}`)
 
-    // 3. Create Stripe Checkout Session
+    // 4. Create Stripe Checkout Session
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: lineItems,
@@ -75,7 +91,7 @@ export async function POST(req: Request) {
       },
     })
 
-    // 4. Return the URL so the frontend can redirect the user
+    // 5. Return the URL so the frontend can redirect the user
     return NextResponse.json({ url: session.url })
 
   } catch (err: any) {
