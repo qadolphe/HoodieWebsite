@@ -99,7 +99,7 @@ export default function CartDrawer() {
                                             className={styles.item}
                                         >
                                             <Link
-                                                href={`/products/${item.slug}`}
+                                                href={item.type === 'service' ? `/services/${item.slug}` : `/products/${item.slug}`}
                                                 className={styles.itemImage}
                                                 onClick={closeCart}
                                             >
@@ -115,7 +115,7 @@ export default function CartDrawer() {
                                             <div className={styles.itemDetails}>
                                                 <div>
                                                     <Link
-                                                        href={`/products/${item.slug}`}
+                                                        href={item.type === 'service' ? `/services/${item.slug}` : `/products/${item.slug}`}
                                                         className={styles.itemName}
                                                         onClick={closeCart}
                                                     >

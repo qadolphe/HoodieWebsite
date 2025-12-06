@@ -67,9 +67,9 @@ values (
 -- 4. The Premium Mail-In Service
 insert into public.products (name, description, base_price, type, slug, image_url)
 values (
-  'Premium Mail-In Service', 
-  'The "Circular" Logistics Model. We send you a box, you send us your hoodie, we line it and send it back.', 
-  55.00, 
+  'Mail-in Service', 
+  'The Premium Experience. Send us your hoodie, and we''ll professionally line it with our premium satin.', 
+  45.00, 
   'service', 
   'mail-in-service',
   '/images/mail-in-service.jpg'

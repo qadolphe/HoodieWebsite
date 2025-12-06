@@ -1,7 +1,27 @@
 import Link from 'next/link'
 import styles from './page.module.css'
+import { supabase } from '@/lib/supabase'
+import { Product } from '@/types'
+import AddToCartButton from '@/components/AddToCartButton'
 
-export default function MailInServicePage() {
+async function getProduct() {
+    const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('slug', 'mail-in-service')
+        .single()
+
+    if (error || !data) {
+        console.error('Error fetching mail-in-service product:', error)
+        return null
+    }
+
+    return data as Product
+}
+
+export default async function MailInServicePage() {
+    const product = await getProduct()
+
     return (
         <div className={styles.container}>
             <div className={styles.contentWrapper}>
@@ -10,9 +30,9 @@ export default function MailInServicePage() {
                         ← Back to Shop
                     </Link>
                     <span className={styles.subHeader}>The Premium Experience</span>
-                    <h1 className={styles.title}>We Do It For You.</h1>
+                    <h1 className={styles.title}>{product?.name ?? 'Mail-in Service'}</h1>
                     <p className={styles.description}>
-                        Don't have the time or tools? Send us your hoodie, and we'll professionally line it with our premium satin.
+                        {product?.description ?? "Don't have the time or tools? Send us your hoodie, and we'll professionally line it with our premium satin."}
                     </p>
                 </div>
 
@@ -37,11 +57,18 @@ export default function MailInServicePage() {
                 <div className={styles.ctaSection}>
                     <h2 className={styles.ctaTitle}>Ready to Upgrade?</h2>
                     <div className={styles.price}>
-                        $45.00 <span className={styles.priceNote}>(Includes 2-way shipping)</span>
+                        ${product?.base_price ?? '45.00'} <span className={styles.priceNote}>(Includes 2-way shipping)</span>
                     </div>
-                    <button className={styles.button}>
-                        Get Started
-                    </button>
+                    {product ? (
+                        <AddToCartButton 
+                            product={product} 
+                            className={styles.button}
+                        />
+                    ) : (
+                        <button className={styles.button} disabled>
+                            Unavailable
+                        </button>
+                    )}
                 </div>
             </div>
         </div>
