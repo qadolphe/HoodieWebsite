@@ -37,6 +37,13 @@ export default async function ProductDetailPage({ params }: Props) {
     return (
         <div className={styles.container}>
             <div className={styles.contentWrapper}>
+                {/* Mobile Back Link */}
+                <div className={styles.mobileBackLink}>
+                    <Link href="/products/kits" className={styles.backLink}>
+                        ← Back to Kits
+                    </Link>
+                </div>
+
                 {/* Image Section */}
                 <div className={styles.imageContainer}>
                     {product.image_url ? (
@@ -56,9 +63,11 @@ export default async function ProductDetailPage({ params }: Props) {
 
                 {/* Details Section */}
                 <div className={styles.detailsContainer}>
-                    <Link href="/products/kits" className={styles.backLink}>
-                        ← Back to Kits
-                    </Link>
+                    <div className={styles.desktopBackLink}>
+                        <Link href="/products/kits" className={styles.backLink}>
+                            ← Back to Kits
+                        </Link>
+                    </div>
 
                     <h1 className={styles.title}>{product.name}</h1>
                     <p className={styles.price}>${product.base_price}</p>

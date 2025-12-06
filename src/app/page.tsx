@@ -71,19 +71,52 @@ export default function Home() {
         <div className={styles.benefitsGrid}>
           {/* ... benefits cards ... */}
           <div className={`${styles.benefitCard} ${styles.largeCard}`}>
-            <span className={styles.benefitIcon}>✨</span>
-            <h3 className={styles.benefitTitle}>Hair Health</h3>
-            <p className={styles.benefitDescription}>Satin reduces friction by up to 90%.</p>
+            <div className={styles.cardBackground}>
+              <Image
+                src="/images/coily-hair-hood-down.png"
+                alt="Hair Health"
+                fill
+                className={styles.cardImage}
+                quality={80}
+              />
+              <div className={styles.cardOverlay} />
+            </div>
+            <div className={styles.cardContent}>
+              <h3 className={styles.benefitTitle}>Hair Health</h3>
+              <p className={styles.benefitDescription}>Satin reduces friction by up to 90%.</p>
+            </div>
           </div>
           <div className={styles.benefitCard}>
-            <span className={styles.benefitIcon}>🛡️</span>
-            <h3 className={styles.benefitTitle}>Protection</h3>
-            <p className={styles.benefitDescription}>Protect your curls from harsh textures.</p>
+            <div className={styles.cardBackground}>
+              <Image
+                src="/images/curly-hair-hood-up.png"
+                alt="Protection"
+                fill
+                className={styles.cardImage}
+                quality={80}
+              />
+              <div className={styles.cardOverlay} />
+            </div>
+            <div className={styles.cardContent}>
+              <h3 className={styles.benefitTitle}>Protection</h3>
+              <p className={styles.benefitDescription}>Protect your curls from harsh textures.</p>
+            </div>
           </div>
           <div className={styles.benefitCard}>
-            <span className={styles.benefitIcon}>💎</span>
-            <h3 className={styles.benefitTitle}>Premium Feel</h3>
-            <p className={styles.benefitDescription}>Add a touch of luxury to everyday wear.</p>
+            <div className={styles.cardBackground}>
+              <Image
+                src="/images/hoodie-close-up.png"
+                alt="Premium Feel"
+                fill
+                className={styles.cardImage}
+                quality={80}
+              />
+              <div className={styles.cardOverlay} />
+            </div>
+            <div className={styles.cardContent}>
+              <h3 className={styles.benefitTitle}>Premium Feel</h3>
+              <p className={styles.benefitDescription}>Add a touch of luxury to everyday wear.</p>
+            </div>
           </div>
         </div>
       </section>

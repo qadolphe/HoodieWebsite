@@ -574,4 +574,33 @@
     display: flex;
     align-items: center;
     padding: 2rem 0;
+}.cardBackground {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+}
+
+.cardImage {
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.benefitCard:hover .cardImage {
+    transform: scale(1.05);
+}
+
+.cardOverlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.1) 100%);
+    z-index: 1;
+}
+
+.cardContent {
+    position: relative;
+    z-index: 2;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
 }

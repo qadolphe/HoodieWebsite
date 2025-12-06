@@ -30,6 +30,20 @@
     gap: 2rem;
 }
 
+@media (max-width: 768px) {
+    .nav {
+        gap: 1rem;
+    }
+    
+    .link {
+        font-size: 0.85rem;
+    }
+
+    .logo {
+        font-size: 1.2rem;
+    }
+}
+
 .link {
     font-size: 0.95rem;
     font-weight: 500;

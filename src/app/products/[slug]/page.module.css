@@ -13,13 +13,32 @@
     width: 100%;
     display: grid;
     grid-template-columns: 1fr;
-    gap: 4rem;
+    gap: 2rem;
 }
 
 @media (min-width: 768px) {
     .contentWrapper {
         grid-template-columns: 1fr 1fr;
         align-items: center;
+        gap: 4rem;
+    }
+}
+
+.mobileBackLink {
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.desktopBackLink {
+    display: none;
+}
+
+@media (min-width: 768px) {
+    .mobileBackLink {
+        display: none;
+    }
+    .desktopBackLink {
+        display: block;
     }
 }
 
@@ -65,10 +84,16 @@
 }
 
 .title {
-    font-size: 3rem;
+    font-size: 2.5rem;
     font-weight: 700;
     margin-bottom: 1rem;
     line-height: 1.1;
+}
+
+@media (min-width: 768px) {
+    .title {
+        font-size: 3rem;
+    }
 }
 
 .price {
