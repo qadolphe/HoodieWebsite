@@ -6,7 +6,6 @@ import { useCart } from '@/hooks/useCart'
 import Link from 'next/link'
 import { CheckCircle } from 'lucide-react'
 
-
 function SuccessContent() {
     const searchParams = useSearchParams()
     const sessionId = searchParams.get('session_id')

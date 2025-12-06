@@ -24,6 +24,14 @@ export default $config({
         SUPABASE_SERVICE_ROLE_KEY: supabaseServiceRoleKey.value,
       }
     });
+  },
+  console: {
+    autodeploy: {
+      target(event) {
+        if (event.type === "branch" && event.branch === "main" && event.action === "pushed") {
+          return { stage: "production" };
+        }
+      }
+    }
   }
 });
-
