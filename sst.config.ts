@@ -32,12 +32,6 @@ export default $config({
           return { stage: "production" };
         }
       },
-      runner(input) {
-        return {
-          engine: "codebuild",
-          install: "npm install" 
-        };
-      }
     }
   }
 });
