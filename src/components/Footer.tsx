@@ -5,7 +5,7 @@ import styles from './Footer.module.css';
 export default function Footer() {
     return (
         <footer className={styles.footer}>
-            <div className="container">
+            <div className="container mx-auto px-4 max-w-7xl">
                 <div className={styles.grid}>
                     <ScrollAnimation variant="fadeUp" delay={0.1}>
                         <div className={styles.col}>
@@ -20,8 +20,8 @@ export default function Footer() {
                         <div className={styles.col}>
                             <h4 className={styles.subheading}>Shop</h4>
                             <ul className={styles.list}>
-                                <li><Link href="/products/full-kit">Full Kit</Link></li>
-                                <li><Link href="/products/sheets">Satin Sheets</Link></li>
+                                <li><Link href="/products/kits">DIY Kits</Link></li>
+                                <li><Link href="/services/mail-in-service">Mail-in Service</Link></li>
                                 <li><Link href="/products">All Products</Link></li>
                             </ul>
                         </div>
@@ -31,9 +31,9 @@ export default function Footer() {
                         <div className={styles.col}>
                             <h4 className={styles.subheading}>Support</h4>
                             <ul className={styles.list}>
+                                <li><Link href="/about">About Us</Link></li>
                                 <li><Link href="/tutorials">Tutorials</Link></li>
                                 <li><Link href="/faq">FAQ</Link></li>
-                                <li><Link href="/contact">Contact</Link></li>
                             </ul>
                         </div>
                     </ScrollAnimation>
