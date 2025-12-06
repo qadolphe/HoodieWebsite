@@ -51,6 +51,8 @@ next-env.d.ts
 # SST
 .sst
 .open-next
+sst-env.d.ts
+sst-deployer_accessKeys.csv
 
 # Supabase
 supabase/functions/**/.env

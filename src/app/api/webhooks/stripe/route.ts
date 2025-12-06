@@ -4,7 +4,7 @@ import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-11-17.clover',
+  apiVersion: '2025-11-17.clover', // Updated to match your checkout route version
 })
 
 const supabase = createClient(
@@ -31,9 +31,14 @@ export async function POST(req: Request) {
     const orderId = session.metadata?.orderId
 
     if (orderId) {
+      // Update the order with status, payment ID, and the TOTAL AMOUNT charged
       const { error } = await supabase
         .from('orders')
-        .update({ status: 'paid', payment_intent_id: session.payment_intent as string })
+        .update({ 
+          status: 'paid', 
+          payment_intent_id: session.payment_intent as string,
+          total_amount: session.amount_total
+        })
         .eq('id', orderId)
 
       if (error) {

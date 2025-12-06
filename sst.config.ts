@@ -10,19 +10,20 @@ export default $config({
     };
   },
   async run() {
-    // 1. Create the Next.js app (Assign it to a variable 'site')
+    const stripeSecret = new sst.Secret("StripeSecretKey");
+    const stripeWebhookSecret = new sst.Secret("StripeWebhookSecret");
+    const supabaseServiceRoleKey = new sst.Secret("SupabaseServiceRoleKey");
+
     const site = new sst.aws.Nextjs("MyWeb", {
+      link: [stripeSecret, stripeWebhookSecret, supabaseServiceRoleKey],
       environment: {
-        // Your Supabase keys will go here later
-        // NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        // NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        NEXT_PUBLIC_SUPABASE_URL: "https://mwpautnftznfgzcxtpko.supabase.co",
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: "sb_publishable_GREOi4yyH_HnwAcwHyBDwQ_mnfJTPot",
+        STRIPE_SECRET_KEY: stripeSecret.value,
+        STRIPE_WEBHOOK_SECRET: stripeWebhookSecret.value,
+        SUPABASE_SERVICE_ROLE_KEY: supabaseServiceRoleKey.value,
       }
     });
-
-    // 2. Return the URL so it prints in the terminal
-    // return {
-    //   websiteUrl: site.url
-    // };
   }
 });
 

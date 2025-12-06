@@ -16,6 +16,7 @@ const supabase = createClient(
 export async function POST(req: Request) {
   try {
     const { items, userId, returnUrl } = await req.json()
+    const origin = new URL(req.url).origin
 
     // 1. Validate Items & Fetch Real Prices from DB
     const itemIds = items.map((item: any) => item.id)
@@ -40,7 +41,7 @@ export async function POST(req: Request) {
       
       // Ensure we have a full URL
       if (imageUrl && !imageUrl.startsWith('http')) {
-        imageUrl = `${process.env.NEXT_PUBLIC_URL}${imageUrl}`
+        imageUrl = `${origin}${imageUrl}`
       }
 
       if (imageUrl && imageUrl.includes('localhost')) {
@@ -83,8 +84,8 @@ export async function POST(req: Request) {
       payment_method_types: ['card'],
       line_items: lineItems,
       mode: 'payment',
-      success_url: `${process.env.NEXT_PUBLIC_URL}/order/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_URL}${returnUrl || '/products'}`, // Redirect back to where they came from
+      success_url: `${origin}/order/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${origin}${returnUrl || '/products'}`, // Redirect back to where they came from
       metadata: {
         orderId: order.id, // CRITICAL: Link Stripe to our DB Order
         uploadToken: uploadToken
