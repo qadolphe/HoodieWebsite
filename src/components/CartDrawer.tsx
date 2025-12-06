@@ -6,11 +6,40 @@ import { X, ShoppingBag, Minus, Plus } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import styles from './CartDrawer.module.css'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
+import { usePathname } from 'next/navigation'
 import AnimatedCounter from './AnimatedCounter'
 
 export default function CartDrawer() {
     const { isOpen, closeCart, items, removeItem, updateQuantity, totalPrice } = useCart()
+    const [isLoading, setIsLoading] = useState(false)
+    const pathname = usePathname()
+
+    const handleCheckout = async () => {
+        try {
+            setIsLoading(true)
+            const response = await fetch('/api/checkout', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    items,
+                    returnUrl: pathname,
+                }),
+            })
+
+            const data = await response.json()
+
+            if (data.url) {
+                window.location.href = data.url
+            }
+        } catch (error) {
+            console.error('Error checking out:', error)
+        } finally {
+            setIsLoading(false)
+        }
+    }
 
     // Prevent body scroll when cart is open
     useEffect(() => {
@@ -137,8 +166,12 @@ export default function CartDrawer() {
                                         <AnimatedCounter value={totalPrice()} isCurrency />
                                     </div>
                                 </div>
-                                <button className={styles.checkoutBtn}>
-                                    Checkout
+                                <button 
+                                    className={styles.checkoutBtn}
+                                    onClick={handleCheckout}
+                                    disabled={isLoading}
+                                >
+                                    {isLoading ? 'Processing...' : 'Checkout'}
                                 </button>
                             </div>
                         )}
