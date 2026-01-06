@@ -9,6 +9,7 @@ import styles from './CartDrawer.module.css'
 import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import AnimatedCounter from './AnimatedCounter'
+import { swat } from '@/lib/swatbloc'
 
 export default function CartDrawer() {
     const { isOpen, closeCart, items, removeItem, updateQuantity, totalPrice } = useCart()
@@ -18,21 +19,25 @@ export default function CartDrawer() {
     const handleCheckout = async () => {
         try {
             setIsLoading(true)
-            const response = await fetch('/api/checkout', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    items,
-                    returnUrl: pathname,
-                }),
+
+            // 1. Create cart via SDK with cart items
+            const cartItems = items.map(item => ({
+                productId: item.id,
+                quantity: item.quantity
+            }))
+
+            const cart = await swat.cart.create(cartItems)
+
+            // 2. Create checkout session via SDK
+            const origin = window.location.origin
+            const checkout = await swat.checkout.create(cart.id, {
+                successUrl: `${origin}/order/success?session_id={CHECKOUT_SESSION_ID}`,
+                cancelUrl: `${origin}${pathname || '/products'}`
             })
 
-            const data = await response.json()
-
-            if (data.url) {
-                window.location.href = data.url
+            // 3. Redirect to Stripe checkout
+            if (checkout.url) {
+                window.location.href = checkout.url
             }
         } catch (error) {
             console.error('Error checking out:', error)
@@ -166,7 +171,7 @@ export default function CartDrawer() {
                                         <AnimatedCounter value={totalPrice()} isCurrency />
                                     </div>
                                 </div>
-                                <button 
+                                <button
                                     className={styles.checkoutBtn}
                                     onClick={handleCheckout}
                                     disabled={isLoading}

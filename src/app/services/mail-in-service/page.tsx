@@ -1,22 +1,30 @@
 import Link from 'next/link'
 import styles from './page.module.css'
-import { supabase } from '@/lib/supabase'
+import { swat } from '@/lib/swatbloc'
 import { Product } from '@/types'
 import AddToCartButton from '@/components/AddToCartButton'
 
-async function getProduct() {
-    const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .eq('slug', 'mail-in-service')
-        .single()
+async function getProduct(): Promise<Product | null> {
+    try {
+        // SDK returns its own Product type, we map to our local type
+        const data: any = await swat.products.get('mail-in-service')
+        if (!data) return null
 
-    if (error || !data) {
+        // Map SDK fields to local Product type
+        return {
+            id: data.id,
+            name: data.name,
+            description: data.description,
+            base_price: data.price ?? data.base_price,
+            type: 'service',
+            image_url: data.images?.[0] ?? data.image_url ?? null,
+            slug: data.slug,
+            created_at: data.created_at
+        }
+    } catch (error) {
         console.error('Error fetching mail-in-service product:', error)
         return null
     }
-
-    return data as Product
 }
 
 export default async function MailInServicePage() {
@@ -60,8 +68,8 @@ export default async function MailInServicePage() {
                         ${product?.base_price ?? '45.00'} <span className={styles.priceNote}>(Includes 2-way shipping)</span>
                     </div>
                     {product ? (
-                        <AddToCartButton 
-                            product={product} 
+                        <AddToCartButton
+                            product={product}
                             className={styles.button}
                         />
                     ) : (

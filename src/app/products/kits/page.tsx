@@ -10,7 +10,7 @@ import SkeletonCard from '@/components/SkeletonCard'
 
 export default function KitsPage() {
     // 1. Fetch the 3 specific kits
-    const { products, loading } = useProducts(['refill-kit', 'essentials-kit', 'all-in-one-kit'])
+    const { products, loading } = useProducts(['the-refill-kit-satin-only', 'the-essentials-kit', 'the-all-in-one-kit'])
 
     // 2. Focus Observer
     const [focusedCardId, setFocusedCardId] = useState<string | null>(null)

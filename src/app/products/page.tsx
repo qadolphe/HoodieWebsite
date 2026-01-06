@@ -3,14 +3,13 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { useEffect, useRef, useState } from 'react'
-import { supabase } from '@/lib/supabase'
 import styles from './page.module.css'
 import { useProducts } from '@/hooks/useProducts'
 import ProductCard from '@/components/ProductCard'
 import SkeletonCard from '@/components/SkeletonCard'
 
 export default function ProductsPage() {
-    const { products, loading } = useProducts(['refill-kit', 'mail-in-service', 'concierge'])
+    const { products, loading } = useProducts(['the-refill-kit-satin-only', 'mail-in-service', 'concierge'])
 
     const [focusedCardId, setFocusedCardId] = useState<string | null>(null)
     const observerRefs = useRef<(HTMLDivElement | null)[]>([])
@@ -70,7 +69,7 @@ export default function ProductsPage() {
                             let overrideButtonText
                             let overrideLink
 
-                            if (item.slug === 'refill-kit') {
+                            if (item.slug === 'the-refill-kit-satin-only') {
                                 overrideTitle = 'DIY Kits'
                                 overrideDescription = 'Everything you need to sew it yourself. Kits include fabric, thread, and guides.'
                                 overrideButtonText = 'Shop Kits'

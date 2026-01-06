@@ -1,19 +1,21 @@
+'use client'
+
 import { useState, useEffect } from 'react'
-import { supabase } from '@/lib/supabase'
+import { swat } from '@/lib/swatbloc'
 
 const UI_CONFIG: Record<string, any> = {
     // KITS
-    'refill-kit': {
+    'the-refill-kit-satin-only': {
         buttonText: 'View Details',
         linkPrefix: '/products',
         features: ['Satin Fabric Sheet', 'Pattern Guide', 'Best for Experts']
     },
-    'essentials-kit': {
+    'the-essentials-kit': {
         buttonText: 'View Details',
         linkPrefix: '/products',
         features: ['Premium Satin Fabric', 'Color-Matched Thread', 'Step-by-Step Guide']
     },
-    'all-in-one-kit': {
+    'the-all-in-one-kit': {
         buttonText: 'View Details',
         linkPrefix: '/products',
         features: ['Handheld Sewing Machine', 'Essentials Kit Included', 'Complete Beginner Set']
@@ -46,38 +48,45 @@ export function useProducts(slugs?: string[]) {
     useEffect(() => {
         async function fetchProducts() {
             try {
-                // 1. Fetch data (Sorted by price by default from DB)
-                let query = supabase
-                    .from('products')
-                    .select('*')
-                    .order('base_price', { ascending: true })
-
-                if (slugs && slugs.length > 0) {
-                    query = query.in('slug', slugs)
-                }
-
-                const { data, error } = await query
-                if (error) throw error
+                // Fetch products from SwatBloc SDK
+                const data: any[] = await swat.products.list()
 
                 if (data) {
-                    // 2. ENHANCE the data with UI config
-                    let processedData = data.map(product => {
+                    // Filter by slugs if provided
+                    let filteredData = slugs && slugs.length > 0
+                        ? data.filter((p: any) => slugs.includes(p.slug))
+                        : data
+
+                    // ENHANCE the data with UI config
+                    // Map SDK fields to local structure:
+                    // SDK: price, images[], category
+                    // Local: base_price, image_url, type
+                    let processedData = filteredData.map((product: any) => {
                         const config = UI_CONFIG[product.slug] || UI_CONFIG['default']
+
+                        // Map SDK fields to existing field names for compatibility
+                        const basePrice = product.price ?? product.base_price
+                        const imageUrl = product.images?.[0] ?? product.image_url ?? null
+                        const productType = product.category === 'service' ? 'service' : 'kit'
 
                         return {
                             ...product,
+                            base_price: basePrice,
+                            image_url: imageUrl,
+                            type: productType,
                             ui: config,
                             name: product.name,
                             description: product.description,
                             slug: product.slug,
-                            displayPrice: product.type === 'kit'
-                                ? `Starting from $${product.base_price}`
-                                : `$${product.base_price}`
+                            displayPrice: productType === 'kit'
+                                ? `Starting from $${basePrice}`
+                                : `$${basePrice}`
                         }
                     })
 
+                    // Sort by slug order if slugs provided
                     if (slugs && slugs.length > 0) {
-                        processedData = processedData.sort((a, b) => {
+                        processedData = processedData.sort((a: any, b: any) => {
                             return slugs.indexOf(a.slug) - slugs.indexOf(b.slug)
                         })
                     }

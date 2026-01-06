@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase'
+import { swat } from '@/lib/swatbloc'
 import { Product } from '@/types'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -12,18 +12,29 @@ interface Props {
     params: Promise<{ slug: string }>
 }
 
-async function getProduct(slug: string) {
-    const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .eq('slug', slug)
-        .single()
+async function getProduct(slug: string): Promise<Product | null> {
+    try {
+        // SDK returns its own Product type, we map to our local type
+        const data: any = await swat.products.get(slug)
+        if (!data) return null
 
-    if (error || !data) {
+        // Map SDK fields to local Product type
+        // SDK uses: price, images[], created_at, updated_at
+        // Local uses: base_price, image_url, type, created_at
+        return {
+            id: data.id,
+            name: data.name,
+            description: data.description,
+            base_price: data.price ?? data.base_price,
+            type: data.category === 'service' ? 'service' : 'kit',
+            image_url: data.images?.[0] ?? data.image_url ?? null,
+            slug: data.slug,
+            created_at: data.created_at
+        }
+    } catch (error) {
+        console.error('Error fetching product:', error)
         return null
     }
-
-    return data as Product
 }
 
 export default async function ProductDetailPage({ params }: Props) {
@@ -77,8 +88,8 @@ export default async function ProductDetailPage({ params }: Props) {
                     </div>
 
                     <div className={styles.actions}>
-                        <AddToCartButton 
-                            product={product} 
+                        <AddToCartButton
+                            product={product}
                             className={styles.addToCartButton}
                         />
                         <p className={styles.secureText}>
