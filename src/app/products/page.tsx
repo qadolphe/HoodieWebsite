@@ -9,7 +9,12 @@ import ProductCard from '@/components/ProductCard'
 import SkeletonCard from '@/components/SkeletonCard'
 
 export default function ProductsPage() {
-    const { products, loading } = useProducts(['the-refill-kit-satin-only', 'mail-in-service', 'concierge'])
+    const { products, loading } = useProducts([
+        'the-refill-kit-satin-only', 
+        'mail-in-service', 
+        'standard-mail-in-service', // Fallback
+        'concierge'
+    ])
 
     const [focusedCardId, setFocusedCardId] = useState<string | null>(null)
     const observerRefs = useRef<(HTMLDivElement | null)[]>([])

@@ -8,7 +8,12 @@ import { useProducts } from '@/hooks/useProducts'
 import ProductCard from '@/components/ProductCard'
 
 export default function Home() {
-  const { products, loading } = useProducts(['the-refill-kit-satin-only', 'mail-in-service', 'concierge'])
+  const { products, loading } = useProducts([
+    'the-refill-kit-satin-only', 
+    'mail-in-service', 
+    'standard-mail-in-service', // Fallback for slug regeneration
+    'concierge'
+  ])
 
   const [focusedCardId, setFocusedCardId] = useState<string | null>(null)
   const observerRefs = useRef<(HTMLDivElement | null)[]>([])

@@ -6,7 +6,14 @@ import AddToCartButton from '@/components/AddToCartButton'
 
 async function getProduct(): Promise<Product | null> {
     try {
-        const data: any = await swat.products.get('mail-in-service')
+        // Try standard slug first, fallback to title-based slug
+        let data: any;
+        try {
+            data = await swat.products.get('mail-in-service')
+        } catch (e) {
+            data = await swat.products.get('standard-mail-in-service')
+        }
+        
         return mapSDKProduct(data) as Product
     } catch (error) {
         console.error('Error fetching mail-in-service product:', error)

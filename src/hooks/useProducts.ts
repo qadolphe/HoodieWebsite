@@ -27,6 +27,11 @@ const UI_CONFIG: Record<string, any> = {
         linkPrefix: '/services',
         features: ['Professional Sewing', '2-Way Shipping Included', 'Fast Turnaround']
     },
+    'standard-mail-in-service': {
+        buttonText: 'Start Service',
+        linkPrefix: '/services',
+        features: ['Professional Sewing', '2-Way Shipping Included', 'Fast Turnaround']
+    },
     'concierge': {
         buttonText: 'Join Waitlist',
         linkPrefix: '/services',
