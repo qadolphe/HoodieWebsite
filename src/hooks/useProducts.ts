@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { swat } from '@/lib/swatbloc'
+import { swat, mapSDKProduct } from '@/lib/swatbloc'
 
 const UI_CONFIG: Record<string, any> = {
     // KITS
@@ -58,32 +58,16 @@ export function useProducts(slugs?: string[]) {
                         : data
 
                     // ENHANCE the data with UI config
-                    // Map SDK fields to local structure:
-                    // SDK: price, images[], category
-                    // Local: base_price, image_url, type
                     let processedData = filteredData.map((product: any) => {
+                        const mapped = mapSDKProduct(product)
                         const config = UI_CONFIG[product.slug] || UI_CONFIG['default']
 
-                        // Map SDK fields to existing field names for compatibility
-                        // Price is in cents, convert to dollars
-                        const rawPrice = product.price ?? product.base_price
-                        const basePrice = parseFloat((rawPrice / 100).toFixed(2))
-
-                        const imageUrl = product.images?.[0] ?? product.image_url ?? null
-                        const productType = product.category === 'service' ? 'service' : 'kit'
-
                         return {
-                            ...product,
-                            base_price: basePrice,
-                            image_url: imageUrl,
-                            type: productType,
+                            ...mapped,
                             ui: config,
-                            name: product.title ?? product.name, // SDK returns title
-                            description: product.description,
-                            slug: product.slug,
-                            displayPrice: productType === 'kit'
-                                ? `Starting from $${basePrice}`
-                                : `$${basePrice}`
+                            displayPrice: mapped?.type === 'kit'
+                                ? `Starting from $${mapped.base_price}`
+                                : `$${mapped.base_price}`
                         }
                     })
 

@@ -1,30 +1,13 @@
 import Link from 'next/link'
 import styles from './page.module.css'
-import { swat } from '@/lib/swatbloc'
+import { swat, mapSDKProduct } from '@/lib/swatbloc'
 import { Product } from '@/types'
 import AddToCartButton from '@/components/AddToCartButton'
 
 async function getProduct(): Promise<Product | null> {
     try {
-        // SDK returns its own Product type, we map to our local type
         const data: any = await swat.products.get('mail-in-service')
-        if (!data) return null
-
-        // Map SDK fields to local Product type
-        // Price is in cents
-        const rawPrice = data.price ?? data.base_price
-        const basePrice = parseFloat((rawPrice / 100).toFixed(2))
-
-        return {
-            id: data.id,
-            name: data.title ?? data.name, // SDK uses title
-            description: data.description,
-            base_price: basePrice,
-            type: 'service',
-            image_url: data.images?.[0] ?? data.image_url ?? null,
-            slug: data.slug,
-            created_at: data.created_at
-        }
+        return mapSDKProduct(data) as Product
     } catch (error) {
         console.error('Error fetching mail-in-service product:', error)
         return null

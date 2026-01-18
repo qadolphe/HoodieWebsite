@@ -12,7 +12,6 @@ const swat = new SwatBloc(requiredKey);
 const INVENTORY = [
   { 
     title: "Standard Mail-In Service", 
-    name: "Standard Mail-In Service", 
     slug: "mail-in-service",
     category: "service",
     price: 6500, // $65.00
@@ -20,7 +19,6 @@ const INVENTORY = [
   },
   { 
     title: "Concierge Service", 
-    name: "Concierge Service", 
     slug: "concierge",
     category: "service",
     price: 14500, // $145.00 (Example: $80 Hoodie + $65 Service) - Adjust as needed
@@ -35,7 +33,6 @@ async function seed() {
     try {
         const product = await swat.products.create({
           title: item.title,
-          name: item.name,
           slug: item.slug,
           category: item.category,
           price: item.price, // Ensure this is in cents!
@@ -43,9 +40,9 @@ async function seed() {
           inventory_quantity: 100, // Match SDK field name
           images: [] 
         });
-        console.log(`✅ Created: ${product.title || product.name}`);
+        console.log(`✅ Created: ${product.title}`);
     } catch (error: any) {
-        console.error(`❌ Failed to create ${item.name}:`, error.message);
+        console.error(`❌ Failed to create ${item.title}:`, error.message);
     }
   }
 }
