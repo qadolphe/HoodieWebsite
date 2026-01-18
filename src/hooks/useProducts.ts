@@ -65,7 +65,10 @@ export function useProducts(slugs?: string[]) {
                         const config = UI_CONFIG[product.slug] || UI_CONFIG['default']
 
                         // Map SDK fields to existing field names for compatibility
-                        const basePrice = product.price ?? product.base_price
+                        // Price is in cents, convert to dollars
+                        const rawPrice = product.price ?? product.base_price
+                        const basePrice = parseFloat((rawPrice / 100).toFixed(2))
+
                         const imageUrl = product.images?.[0] ?? product.image_url ?? null
                         const productType = product.category === 'service' ? 'service' : 'kit'
 
@@ -75,7 +78,7 @@ export function useProducts(slugs?: string[]) {
                             image_url: imageUrl,
                             type: productType,
                             ui: config,
-                            name: product.name,
+                            name: product.title ?? product.name, // SDK returns title
                             description: product.description,
                             slug: product.slug,
                             displayPrice: productType === 'kit'

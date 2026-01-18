@@ -11,11 +11,15 @@ async function getProduct(): Promise<Product | null> {
         if (!data) return null
 
         // Map SDK fields to local Product type
+        // Price is in cents
+        const rawPrice = data.price ?? data.base_price
+        const basePrice = parseFloat((rawPrice / 100).toFixed(2))
+
         return {
             id: data.id,
-            name: data.name,
+            name: data.title ?? data.name, // SDK uses title
             description: data.description,
-            base_price: data.price ?? data.base_price,
+            base_price: basePrice,
             type: 'service',
             image_url: data.images?.[0] ?? data.image_url ?? null,
             slug: data.slug,

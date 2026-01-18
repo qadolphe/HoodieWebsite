@@ -21,11 +21,16 @@ async function getProduct(slug: string): Promise<Product | null> {
         // Map SDK fields to local Product type
         // SDK uses: price, images[], created_at, updated_at
         // Local uses: base_price, image_url, type, created_at
+
+        // Price is in cents
+        const rawPrice = data.price ?? data.base_price
+        const basePrice = parseFloat((rawPrice / 100).toFixed(2))
+
         return {
             id: data.id,
-            name: data.name,
+            name: data.title ?? data.name, // SDK uses title
             description: data.description,
-            base_price: data.price ?? data.base_price,
+            base_price: basePrice,
             type: data.category === 'service' ? 'service' : 'kit',
             image_url: data.images?.[0] ?? data.image_url ?? null,
             slug: data.slug,
