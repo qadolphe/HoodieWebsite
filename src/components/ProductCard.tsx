@@ -33,7 +33,7 @@ export default function ProductCard({
 
     const getPriceDisplay = (p: any) => {
         if (p.type === 'kit') return `Starting from $${p.base_price}`
-        if (p.slug === 'concierge') return `Cost of Hoodie + $${p.base_price}`
+        if (p.slug === 'concierge' || p.slug === 'concierge-service') return `Cost of Hoodie + $${p.base_price}`
         return `$${p.base_price}`
     }
 

@@ -37,6 +37,11 @@ const UI_CONFIG: Record<string, any> = {
         linkPrefix: '/services',
         features: ['Brand New Hoodie', 'Custom Satin Lining', 'Delivered to Your Door']
     },
+    'concierge-service': {
+        buttonText: 'Join Waitlist',
+        linkPrefix: '/services',
+        features: ['Brand New Hoodie', 'Custom Satin Lining', 'Delivered to Your Door']
+    },
 
     // FALLBACK
     'default': {

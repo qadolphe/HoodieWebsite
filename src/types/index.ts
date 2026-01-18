@@ -7,6 +7,11 @@ export interface Product {
     image_url: string | null
     slug: string
     created_at: string
+    ui?: {
+        buttonText: string
+        linkPrefix: string
+        features: string[]
+    }
 }
 
 export interface ProductVariant {

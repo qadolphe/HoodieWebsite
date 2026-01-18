@@ -6,14 +6,10 @@ import { useEffect, useRef, useState } from 'react'
 import styles from './page.module.css'
 import { useProducts } from '@/hooks/useProducts'
 import ProductCard from '@/components/ProductCard'
+import { HOME_FEATURED_SLUGS } from '@/lib/constants'
 
 export default function Home() {
-  const { products, loading } = useProducts([
-    'the-refill-kit-satin-only', 
-    'mail-in-service', 
-    'standard-mail-in-service', // Fallback for slug regeneration
-    'concierge'
-  ])
+  const { products, loading } = useProducts(HOME_FEATURED_SLUGS)
 
   const [focusedCardId, setFocusedCardId] = useState<string | null>(null)
   const observerRefs = useRef<(HTMLDivElement | null)[]>([])
