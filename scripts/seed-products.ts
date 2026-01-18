@@ -21,8 +21,8 @@ const INVENTORY = [
     title: "Concierge Service", 
     slug: "concierge",
     category: "service",
-    price: 14500, // $145.00 (Example: $80 Hoodie + $65 Service) - Adjust as needed
-    description: "You buy the hoodie new (e.g., a Nike hoodie) → You line it → You ship the finished product. Price includes estimated hoodie cost." 
+    price: 6500, // $65.00 Service Fee (UI adds "Cost of Hoodie +")
+    description: "You buy the hoodie new (e.g., a Nike hoodie) → You line it → You ship the finished product. Price is for the service fee only." 
   }
 ];
 

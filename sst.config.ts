@@ -19,6 +19,7 @@ export default $config({
       environment: {
         NEXT_PUBLIC_SUPABASE_URL: "https://mwpautnftznfgzcxtpko.supabase.co",
         NEXT_PUBLIC_SUPABASE_ANON_KEY: "sb_publishable_GREOi4yyH_HnwAcwHyBDwQ_mnfJTPot",
+        NEXT_PUBLIC_SWATBLOC_KEY: "pk_live_dnX7sfOjZoIhBrisMOQ5J9NFS6Ee1V2W",
         STRIPE_SECRET_KEY: stripeSecret.value,
         STRIPE_WEBHOOK_SECRET: stripeWebhookSecret.value,
         SUPABASE_SERVICE_ROLE_KEY: supabaseServiceRoleKey.value,

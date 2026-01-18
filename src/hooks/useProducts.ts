@@ -58,18 +58,22 @@ export function useProducts(slugs?: string[]) {
                         : data
 
                     // ENHANCE the data with UI config
-                    let processedData = filteredData.map((product: any) => {
-                        const mapped = mapSDKProduct(product)
-                        const config = UI_CONFIG[product.slug] || UI_CONFIG['default']
+                    let processedData = filteredData
+                        .map((product: any) => {
+                            const mapped = mapSDKProduct(product)
+                            if (!mapped) return null
+                            
+                            const config = UI_CONFIG[product.slug] || UI_CONFIG['default']
 
-                        return {
-                            ...mapped,
-                            ui: config,
-                            displayPrice: mapped?.type === 'kit'
-                                ? `Starting from $${mapped.base_price}`
-                                : `$${mapped.base_price}`
-                        }
-                    })
+                            return {
+                                ...mapped,
+                                ui: config,
+                                displayPrice: mapped.type === 'kit'
+                                    ? `Starting from $${mapped.base_price}`
+                                    : `$${mapped.base_price}`
+                            }
+                        })
+                        .filter((p): p is NonNullable<typeof p> => p !== null)
 
                     // Sort by slug order if slugs provided
                     if (slugs && slugs.length > 0) {
