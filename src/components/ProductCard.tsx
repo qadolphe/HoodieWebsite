@@ -2,6 +2,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Check } from 'lucide-react'
 import styles from './ProductCard.module.css'
+import { PRODUCT_IDS } from '@/lib/constants'
 
 interface ProductCardProps {
     product: any
@@ -33,7 +34,7 @@ export default function ProductCard({
 
     const getPriceDisplay = (p: any) => {
         if (p.type === 'kit') return `Starting from $${p.base_price}`
-        if (p.slug === 'concierge' || p.slug === 'concierge-service') return `Cost of Hoodie + $${p.base_price}`
+        if (p.id === PRODUCT_IDS.CONCIERGE_SERVICE) return `Cost of Hoodie + $${p.base_price}`
         return `$${p.base_price}`
     }
 
@@ -47,7 +48,7 @@ export default function ProductCard({
             `}
         >
             <div className={styles.backgroundImageContainer}>
-                {product.image_url && (
+                {product.image_url ? (
                     <Image
                         src={product.image_url}
                         alt={product.name}
@@ -55,6 +56,17 @@ export default function ProductCard({
                         className={styles.backgroundImage}
                         quality={90}
                         priority={priority}
+                    />
+                ) : (
+                    <div 
+                        className={styles.placeholderBackground}
+                        style={{ 
+                            background: product.id === PRODUCT_IDS.CONCIERGE_SERVICE 
+                                ? 'linear-gradient(135deg, #4c1d95 0%, #1e3a8a 100%)' 
+                                : 'linear-gradient(135deg, #111827 0%, #000 100%)',
+                            width: '100%',
+                            height: '100%'
+                        }}
                     />
                 )}
                 <div className={styles.gradientOverlay} />

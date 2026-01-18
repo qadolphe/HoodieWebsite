@@ -2,42 +2,33 @@
 
 import { useState, useEffect } from 'react'
 import { swat, mapSDKProduct } from '@/lib/swatbloc'
+import { PRODUCT_IDS } from '@/lib/constants'
 
 const UI_CONFIG: Record<string, any> = {
     // KITS
-    'the-refill-kit-satin-only': {
+    [PRODUCT_IDS.REFILL_KIT]: {
         buttonText: 'View Details',
         linkPrefix: '/products',
         features: ['Satin Fabric Sheet', 'Pattern Guide', 'Best for Experts']
     },
-    'the-essentials-kit': {
+    [PRODUCT_IDS.ESSENTIALS_KIT]: {
         buttonText: 'View Details',
         linkPrefix: '/products',
         features: ['Premium Satin Fabric', 'Color-Matched Thread', 'Step-by-Step Guide']
     },
-    'the-all-in-one-kit': {
+    [PRODUCT_IDS.ALL_IN_ONE_KIT]: {
         buttonText: 'View Details',
         linkPrefix: '/products',
         features: ['Handheld Sewing Machine', 'Essentials Kit Included', 'Complete Beginner Set']
     },
 
     // SERVICES
-    'mail-in-service': {
+    [PRODUCT_IDS.MAIL_IN_SERVICE]: {
         buttonText: 'Start Service',
         linkPrefix: '/services',
         features: ['Professional Sewing', '2-Way Shipping Included', 'Fast Turnaround']
     },
-    'standard-mail-in-service': {
-        buttonText: 'Start Service',
-        linkPrefix: '/services',
-        features: ['Professional Sewing', '2-Way Shipping Included', 'Fast Turnaround']
-    },
-    'concierge': {
-        buttonText: 'Join Waitlist',
-        linkPrefix: '/services',
-        features: ['Brand New Hoodie', 'Custom Satin Lining', 'Delivered to Your Door']
-    },
-    'concierge-service': {
+    [PRODUCT_IDS.CONCIERGE_SERVICE]: {
         buttonText: 'Join Waitlist',
         linkPrefix: '/services',
         features: ['Brand New Hoodie', 'Custom Satin Lining', 'Delivered to Your Door']
@@ -51,7 +42,7 @@ const UI_CONFIG: Record<string, any> = {
     }
 }
 
-export function useProducts(slugs?: string[]) {
+export function useProducts(ids?: string[]) {
     const [products, setProducts] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
 
@@ -62,9 +53,9 @@ export function useProducts(slugs?: string[]) {
                 const data: any[] = await swat.products.list()
 
                 if (data) {
-                    // Filter by slugs if provided
-                    let filteredData = slugs && slugs.length > 0
-                        ? data.filter((p: any) => slugs.includes(p.slug))
+                    // Filter by IDs if provided
+                    let filteredData = ids && ids.length > 0
+                        ? data.filter((p: any) => ids.includes(p.id))
                         : data
 
                     // ENHANCE the data with UI config
@@ -73,7 +64,7 @@ export function useProducts(slugs?: string[]) {
                             const mapped = mapSDKProduct(product)
                             if (!mapped) return null
                             
-                            const config = UI_CONFIG[product.slug] || UI_CONFIG['default']
+                            const config = UI_CONFIG[product.id] || UI_CONFIG['default']
 
                             return {
                                 ...mapped,
@@ -85,10 +76,13 @@ export function useProducts(slugs?: string[]) {
                         })
                         .filter((p): p is NonNullable<typeof p> => p !== null)
 
-                    // Sort by slug order if slugs provided
-                    if (slugs && slugs.length > 0) {
+                    // De-duplicate by ID (just in case)
+                    processedData = Array.from(new Map(processedData.map(p => [p.id, p])).values())
+
+                    // Sort by original ID order if provided
+                    if (ids && ids.length > 0) {
                         processedData = processedData.sort((a: any, b: any) => {
-                            return slugs.indexOf(a.slug) - slugs.indexOf(b.slug)
+                            return ids.indexOf(a.id) - ids.indexOf(b.id)
                         })
                     }
 
@@ -102,7 +96,7 @@ export function useProducts(slugs?: string[]) {
         }
 
         fetchProducts()
-    }, [JSON.stringify(slugs)])
+    }, [JSON.stringify(ids)])
 
     return { products, loading }
 }

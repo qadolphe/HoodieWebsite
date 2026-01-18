@@ -6,10 +6,10 @@ import { useEffect, useRef, useState } from 'react'
 import styles from './page.module.css'
 import { useProducts } from '@/hooks/useProducts'
 import ProductCard from '@/components/ProductCard'
-import { HOME_FEATURED_SLUGS } from '@/lib/constants'
+import { HOME_FEATURED_IDS, PRODUCT_IDS } from '@/lib/constants'
 
 export default function Home() {
-  const { products, loading } = useProducts(HOME_FEATURED_SLUGS)
+  const { products, loading } = useProducts(HOME_FEATURED_IDS)
 
   const [focusedCardId, setFocusedCardId] = useState<string | null>(null)
   const observerRefs = useRef<(HTMLDivElement | null)[]>([])
@@ -137,11 +137,21 @@ export default function Home() {
               let overrideButtonText
               let overrideLink
 
-              if (item.slug === 'the-refill-kit-satin-only') {
+              if (item.id === PRODUCT_IDS.REFILL_KIT) {
                 overrideTitle = 'DIY Kits'
                 overrideDescription = 'Everything you need to sew it yourself. Kits include fabric, thread, and guides.'
                 overrideButtonText = 'Shop Kits'
                 overrideLink = '/products/kits'
+              } else if (item.id === PRODUCT_IDS.MAIL_IN_SERVICE) {
+                overrideTitle = 'Mail-In'
+                overrideDescription = 'Send us your favorite hoodie, and we\'ll professionally line it with premium satin.'
+                overrideButtonText = 'How it Works'
+                overrideLink = '/services/mail-in-service'
+              } else if (item.id === PRODUCT_IDS.CONCIERGE_SERVICE) {
+                overrideTitle = 'Concierge'
+                overrideDescription = 'Don\'t have a hoodie? We\'ll buy one for you, line it, and ship the finished piece.'
+                overrideButtonText = 'Join Waitlist'
+                overrideLink = '/services/concierge-service'
               }
 
               return (

@@ -7,10 +7,10 @@ import styles from './page.module.css'
 import { useProducts } from '@/hooks/useProducts'
 import ProductCard from '@/components/ProductCard'
 import SkeletonCard from '@/components/SkeletonCard'
-import { KIT_SLUGS, SERVICE_SLUGS } from '@/lib/constants'
+import { HOME_FEATURED_IDS, PRODUCT_IDS } from '@/lib/constants'
 
 export default function ProductsPage() {
-    const { products, loading } = useProducts([...KIT_SLUGS, ...SERVICE_SLUGS])
+    const { products, loading } = useProducts(HOME_FEATURED_IDS)
 
     const [focusedCardId, setFocusedCardId] = useState<string | null>(null)
     const observerRefs = useRef<(HTMLDivElement | null)[]>([])
@@ -46,10 +46,10 @@ export default function ProductsPage() {
 
             {/* Header Section */}
             <section className={styles.headerSection}>
-                <span className={styles.subHeader}>Full Catalog</span>
-                <h1 className={styles.pageTitle}>Shop All Options</h1>
+                <span className={styles.subHeader}>Choose Your Upgrade</span>
+                <h1 className={styles.pageTitle}>The Premium Collection</h1>
                 <p className={styles.description}>
-                    Choose the method that works best for your time and budget.
+                    From DIY kits to full white-glove service.
                 </p>
             </section>
 
@@ -70,11 +70,21 @@ export default function ProductsPage() {
                             let overrideButtonText
                             let overrideLink
 
-                            if (item.slug === 'the-refill-kit-satin-only') {
+                            if (item.id === PRODUCT_IDS.REFILL_KIT) {
                                 overrideTitle = 'DIY Kits'
                                 overrideDescription = 'Everything you need to sew it yourself. Kits include fabric, thread, and guides.'
                                 overrideButtonText = 'Shop Kits'
                                 overrideLink = '/products/kits'
+                            } else if (item.id === PRODUCT_IDS.MAIL_IN_SERVICE) {
+                                overrideTitle = 'Mail-In'
+                                overrideDescription = 'Send us your favorite hoodie, and we\'ll professionally line it with premium satin.'
+                                overrideButtonText = 'How it Works'
+                                overrideLink = '/services/mail-in-service'
+                            } else if (item.id === PRODUCT_IDS.CONCIERGE_SERVICE) {
+                                overrideTitle = 'Concierge'
+                                overrideDescription = 'Don\'t have a hoodie? We\'ll buy one for you, line it, and ship the finished piece.'
+                                overrideButtonText = 'Join Waitlist'
+                                overrideLink = '/services/concierge-service'
                             }
 
                             return (
