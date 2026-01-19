@@ -9,10 +9,14 @@ if (!apiKey) {
     console.warn('NEXT_PUBLIC_SWATBLOC_KEY is not set. SDK features will not work.')
 }
 
+if (!privateKey) {
+    console.warn('NEXT_PRIVATE_SWATBLOC_KEY is not set. Admin operations like order updates will fail.')
+}
+
 export const swat = new SwatBloc(apiKey || '')
 
-// Server-side instance with private key capability
-export const swatAdmin = new SwatBloc(privateKey || apiKey || '')
+// Server-side instance with private key capability - REQUIRED for order access
+export const swatAdmin = new SwatBloc(privateKey || '')
 
 /**
  * Maps SDK product data to local Product structure

@@ -82,6 +82,7 @@ export const useCart = create<CartStore>()(
     }),
     {
       name: 'hoodie-cart-storage', // unique name for localStorage
+      partialize: (state) => ({ items: state.items }), // Only persist items, not isOpen state
       onRehydrateStorage: (state) => {
         return () => {
           state?.setHasHydrated(true)

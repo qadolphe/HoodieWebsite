@@ -10,8 +10,8 @@ export async function POST(req: Request) {
         return NextResponse.json({ success: false, error: 'Missing required fields' }, { status: 400 });
     }
 
-    // Update 'metafields' in public.orders using the SDK
-    await (swatAdmin as any).collection('orders').update(orderId, {
+    // Update measurements in the order using the SDK
+    await (swatAdmin.orders.update as any)(orderId, {
       metafields: {
           measurement_status: 'complete',
           ...measurements

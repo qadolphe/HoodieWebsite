@@ -24,6 +24,7 @@ export default function CartDrawer() {
     const handleCheckout = async () => {
         try {
             setIsLoading(true)
+            closeCart() // Close the drawer immediately to prevent it from covering success page on specific return flows
 
             // 1. Create cart via SDK with cart items
             const cartItems = items.map(item => ({

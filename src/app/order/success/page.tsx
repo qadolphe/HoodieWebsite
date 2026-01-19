@@ -24,23 +24,44 @@ function SuccessContent() {
 
     useEffect(() => {
         // Only run on client, once hydrated, once we have a session, and not already processed
-        if (!mounted || !_hasHydrated || processed || !sessionId) return;
-
+        if (!mounted || !_hasHydrated || processed) return;
+        
+        // If we don't have a session ID, we might be revisiting. Logic handled below.
+        if (!sessionId && !urlOrderId) return;
+        
         // 1. Check for Kits in the cart *before* clearing
-        const kitFound = items.some(item => 
+        const kitFoundInCart = items.some(item => 
             item.type === 'kit' || 
             item.name.toLowerCase().includes('kit') ||
             item.slug?.toLowerCase().includes('kit')
         );
         
-        if (kitFound) {
+        if (kitFoundInCart) {
             setHasKit(true);
+            clearCart();
+            setProcessed(true);
+        } else if (urlOrderId) {
+            // Fallback: If cart is empty (refresh), check API
+            fetch(`/api/measure/status?orderId=${urlOrderId}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success && data.hasKit) {
+                        setHasKit(true);
+                    }
+                    // Always mark processed to avoid loops
+                    setProcessed(true);
+                    clearCart();
+                })
+                .catch(err => {
+                    console.error('Failed to verify kit status:', err);
+                    setProcessed(true);
+                });
+        } else {
+             clearCart();
+             setProcessed(true);
         }
 
-        // 2. Clear the cart
-        clearCart();
-        setProcessed(true);
-    }, [mounted, _hasHydrated, sessionId, items, clearCart, processed])
+    }, [mounted, _hasHydrated, sessionId, items, clearCart, processed, urlOrderId])
 
     if (!mounted || !_hasHydrated) {
         return (

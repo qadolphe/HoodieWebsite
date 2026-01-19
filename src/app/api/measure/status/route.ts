@@ -11,17 +11,29 @@ export async function GET(req: Request) {
     }
 
     // Fetch order to check status
-    const data = await (swatAdmin as any).collection('orders').get(orderId);
+    const data = await swatAdmin.orders.get(orderId) as any;
 
     if (!data) {
          return NextResponse.json({ success: false, error: 'Order not found' }, { status: 404 });
     }
 
-    const isComplete = data.metafields?.measurement_status === 'complete';
+    // Check if order contains a kit (for frontend persistence)
+    const hasKit = data.items?.some((item: any) => 
+        item.product?.type === 'kit' || 
+        item.product?.name?.toLowerCase().includes('kit') ||
+        item.title?.toLowerCase().includes('kit')
+    ) || data.line_items?.some((item: any) => 
+        item.product?.type === 'kit' || 
+        item.product?.name?.toLowerCase().includes('kit') ||
+        item.title?.toLowerCase().includes('kit')
+    ) || false;
+
+    const isComplete = data.metafields?.measurement_status === 'complete' || data.metadata?.measurement_status === 'complete';
 
     return NextResponse.json({ 
         success: true, 
         completed: isComplete,
+        hasKit,
         measurements: isComplete ? data.metafields : null 
     });
   } catch (error) {
