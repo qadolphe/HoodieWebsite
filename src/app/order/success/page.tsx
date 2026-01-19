@@ -41,7 +41,6 @@ function SuccessContent() {
         );
         
         if (kitFoundInCart) {
-            console.log('Kit found in cart locally');
             setHasKit(true);
             setResolvedOrderId(urlOrderId);
             clearCart();
@@ -49,12 +48,10 @@ function SuccessContent() {
         } else {
             // Fallback: If cart is empty (refresh), or to ensure we have the right Order ID
             const queryParam = sessionId ? `sessionId=${sessionId}` : `orderId=${urlOrderId}`;
-            console.log('Checking kit status with:', queryParam);
             
             fetch(`/api/measure/status?${queryParam}`)
                 .then(res => res.json())
                 .then(data => {
-                    console.log('Kit status response:', data);
                     if (data.success) {
                         if (data.hasKit) setHasKit(true);
                         if (data.orderId) setResolvedOrderId(data.orderId);
@@ -64,7 +61,6 @@ function SuccessContent() {
                     clearCart();
                 })
                 .catch(err => {
-                    console.error('Failed to verify kit status:', err);
                     setProcessed(true);
                 });
         }
