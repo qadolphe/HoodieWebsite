@@ -92,8 +92,16 @@ export default function MeasurementPage({ params }: { params: Promise<{ orderId:
     );
   }
 
-  const currentUrl = typeof window !== 'undefined' ? window.location.href : '';
-  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(currentUrl)}`;
+  const [currentUrl, setCurrentUrl] = useState<string>('');
+  const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+        const url = window.location.href;
+        setCurrentUrl(url);
+        setQrCodeUrl(`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}`);
+    }
+  }, []);
 
   const copyLink = () => {
       navigator.clipboard.writeText(currentUrl);
@@ -102,59 +110,76 @@ export default function MeasurementPage({ params }: { params: Promise<{ orderId:
   }
 
   return (
-    <div className="min-h-screen bg-black text-white p-4 md:p-8 flex items-center justify-center">
-      <div className="w-full max-w-4xl grid md:grid-cols-2 gap-8 items-center">
+    <div className="min-h-screen bg-black text-white p-6 md:p-12 flex items-center justify-center">
+      <div className="w-full max-w-5xl grid md:grid-cols-2 gap-12 items-center">
         
         {/* Left: Mobile Handoff */}
-        <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-8 flex flex-col items-center text-center h-full justify-center">
-             <div className="mb-6 p-4 bg-white rounded-xl">
+        <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-8 lg:p-12 flex flex-col items-center text-center h-full justify-center shadow-2xl">
+            {qrCodeUrl && (
+             <div className="mb-8 p-4 bg-white rounded-2xl shadow-lg">
                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                 <img src={qrCodeUrl} alt="Scan to Measure on Phone" className="w-40 h-40 mix-blend-multiply" />
+                 <img src={qrCodeUrl} alt="Scan to Measure on Phone" className="w-48 h-48 mix-blend-multiply" />
              </div>
-             <h2 className="text-xl font-bold mb-2">Use your phone</h2>
-             <p className="text-zinc-400 text-sm mb-6">
+            )}
+             <h2 className="text-2xl font-bold mb-4">Use your phone</h2>
+             <p className="text-zinc-400 text-base mb-8 max-w-xs mx-auto">
                  Scan this code to open the tool on your mobile device. Photos are easier to take!
              </p>
-             <div className="flex items-center gap-2 w-full">
-                 <input readOnly value={currentUrl} className="bg-zinc-950 border border-zinc-700 text-zinc-400 text-xs p-3 rounded-lg flex-1 truncate" />
-                 <button onClick={copyLink} className="p-3 bg-zinc-800 rounded-lg hover:bg-zinc-700 transition">
-                     {copied ? <CheckCircle className="w-4 h-4 text-green-500" /> : <span className="text-xs font-bold">Copy</span>}
+             <div className="flex items-center gap-3 w-full max-w-xs">
+                 <div className="flex-1 bg-zinc-950 border border-zinc-800 text-zinc-400 text-sm px-4 py-3 rounded-xl truncate font-mono">
+                    {currentUrl || 'Loading...'}
+                 </div>
+                 <button onClick={copyLink} className="p-3 bg-zinc-800 hover:bg-zinc-700 text-white rounded-xl transition-all hover:scale-105 active:scale-95 border border-zinc-700">
+                     {copied ? <CheckCircle className="w-5 h-5 text-green-500" /> : <span className="text-xs font-bold uppercase tracking-wider">Copy</span>}
                  </button>
              </div>
-             <div className="mt-4 flex items-center gap-2 text-xs text-zinc-500">
-                 <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+             <div className="mt-8 flex items-center gap-3 text-sm text-zinc-500 bg-zinc-950/50 px-4 py-2 rounded-full border border-zinc-900">
+                 <span className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.5)]"></span>
                  Waiting for device...
              </div>
         </div>
 
         {/* Right: Desktop Upload */}
-        <div className="flex flex-col items-center text-center space-y-8 py-8">
+        <div className="flex flex-col items-center text-center md:items-start md:text-left space-y-8 py-8 md:pl-4">
             <div>
-                <h1 className="text-3xl font-bold mb-4">Measurement Tool</h1>
-                <p className="text-zinc-400 max-w-xs mx-auto">
+                <h1 className="text-4xl md:text-5xl font-bold mb-6 tracking-tight">Measurement Tool</h1>
+                <p className="text-zinc-400 text-lg max-w-md bg-zinc-900/30 p-4 rounded-xl border border-zinc-800/30">
                     We just need one photo to calculate your perfect fit.
                 </p>
             </div>
 
-            <div className="bg-zinc-900/50 border border-zinc-800/50 p-6 rounded-xl text-left text-sm space-y-3 max-w-sm w-full mx-auto">
-                 <h3 className="font-semibold text-white">Instructions:</h3>
-                 <ul className="space-y-2 text-zinc-400 list-disc list-inside">
-                     <li>Lay your favorite hoodie flat on the floor.</li>
-                     <li>Place a <strong>standard credit card</strong> next to it (for scale).</li>
-                     <li>Take a photo directly from above.</li>
+            <div className="bg-zinc-900 border border-zinc-800 p-8 rounded-2xl w-full max-w-md shadow-xl">
+                 <h3 className="font-semibold text-white text-lg mb-4 flex items-center gap-2">
+                    Instructions:
+                 </h3>
+                 <ul className="space-y-4 text-zinc-400 text-left">
+                     <li className="flex items-start gap-3">
+                        <span className="bg-zinc-800 text-zinc-300 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">1</span>
+                        Lay your favorite hoodie flat on the floor.
+                     </li>
+                     <li className="flex items-start gap-3">
+                        <span className="bg-zinc-800 text-zinc-300 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">2</span>
+                        <span>Place a <strong className="text-white">standard credit card</strong> next to it (for scale).</span>
+                     </li>
+                     <li className="flex items-start gap-3">
+                        <span className="bg-zinc-800 text-zinc-300 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">3</span>
+                        Take a photo directly from above.
+                     </li>
                  </ul>
             </div>
 
-            <label className="cursor-pointer group relative overflow-hidden bg-white text-black font-bold py-4 px-8 rounded-full hover:bg-zinc-200 transition-all transform hover:scale-105 inline-flex items-center gap-3">
-                <Upload className="w-5 h-5" />
-                Upload Photo instead
-                <input 
-                    type="file" 
-                    accept="image/*" 
-                    className="hidden" 
-                    onChange={handleImageUpload}
-                />
-            </label>
+            <div className="pt-4">
+                <label className="cursor-pointer group relative overflow-hidden bg-white text-black font-bold py-5 px-10 rounded-full hover:bg-zinc-200 transition-all transform hover:scale-105 inline-flex items-center gap-3 text-lg shadow-lg active:scale-95">
+                    <Upload className="w-6 h-6" />
+                    Upload Photo Instead
+                    <input 
+                        type="file" 
+                        accept="image/*" 
+                        className="hidden" 
+                        onChange={handleImageUpload}
+                    />
+                </label>
+            </div>
         </div>
 
       </div>

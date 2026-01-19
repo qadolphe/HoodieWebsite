@@ -21,8 +21,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={inter.variable}>
+    <html lang="en" suppressHydrationWarning>
+      <body className={inter.variable} suppressHydrationWarning>
         <Header />
         <CartDrawer />
         <main className="min-h-screen pt-[70px]">
