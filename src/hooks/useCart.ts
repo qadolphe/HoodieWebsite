@@ -16,6 +16,8 @@ export interface CartItem {
 interface CartStore {
   items: CartItem[]
   isOpen: boolean
+  _hasHydrated: boolean
+  setHasHydrated: (state: boolean) => void
   openCart: () => void
   closeCart: () => void
   addItem: (item: CartItem) => void
@@ -32,6 +34,8 @@ export const useCart = create<CartStore>()(
     (set, get) => ({
       items: [],
       isOpen: false,
+      _hasHydrated: false,
+      setHasHydrated: (state) => set({ _hasHydrated: state }),
 
       openCart: () => set({ isOpen: true }),
       closeCart: () => set({ isOpen: false }),
@@ -78,6 +82,11 @@ export const useCart = create<CartStore>()(
     }),
     {
       name: 'hoodie-cart-storage', // unique name for localStorage
+      onRehydrateStorage: (state) => {
+        return () => {
+          state?.setHasHydrated(true)
+        }
+      }
     }
   )
 )

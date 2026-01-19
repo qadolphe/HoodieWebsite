@@ -14,7 +14,12 @@ import { swat } from '@/lib/swatbloc'
 export default function CartDrawer() {
     const { isOpen, closeCart, items, removeItem, updateQuantity, totalPrice } = useCart()
     const [isLoading, setIsLoading] = useState(false)
+    const [mounted, setMounted] = useState(false)
     const pathname = usePathname()
+
+    useEffect(() => {
+        setMounted(true)
+    }, [])
 
     const handleCheckout = async () => {
         try {
@@ -58,6 +63,8 @@ export default function CartDrawer() {
             document.body.style.overflow = 'unset'
         }
     }, [isOpen])
+
+    if (!mounted) return null;
 
     return (
         <AnimatePresence>
