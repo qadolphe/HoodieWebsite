@@ -22,6 +22,18 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+          <script dangerouslySetInnerHTML={{
+            __html: `
+              if (typeof window !== 'undefined' && !window.ethereum) {
+                  // Prevent "undefined is not an object" errors from wallet injectors
+                  try {
+                    window.ethereum = window.ethereum || {};
+                  } catch (e) {}
+              }
+            `
+          }} />
+      </head>
       <body className={inter.variable} suppressHydrationWarning>
         <Header />
         <CartDrawer />

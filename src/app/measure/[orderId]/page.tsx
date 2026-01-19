@@ -12,19 +12,74 @@ export default function MeasurementPage({ params }: { params: Promise<{ orderId:
   
   const [image, setImage] = useState<string | null>(null);
   const [status, setStatus] = useState<'pending' | 'complete'>('pending');
+  const [items, setItems] = useState<{ id: string; name: string; status: string }[]>([]);
+  const [activeItemId, setActiveItemId] = useState<string | null>(null);
+  const [localCompletedIds, setLocalCompletedIds] = useState<Set<string>>(new Set());
+  
   const [copied, setCopied] = useState(false);
+  const [currentUrl, setCurrentUrl] = useState<string>('');
+  const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+        const url = new URL(window.location.href);
+        
+        // In development, if NEXT_PUBLIC_URL is set (e.g. to a local IP or tunnel), 
+        // use that host instead of localhost so phones can scan the QR code.
+        const envUrl = process.env.NEXT_PUBLIC_URL;
+        if (envUrl && envUrl !== 'http://localhost:3000' && window.location.hostname === 'localhost') {
+            const baseUrl = envUrl.endsWith('/') ? envUrl.slice(0, -1) : envUrl;
+            setCurrentUrl(`${baseUrl}${url.pathname}${url.search}`);
+        } else {
+            setCurrentUrl(window.location.href);
+        }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (currentUrl) {
+        setQrCodeUrl(`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(currentUrl)}`);
+    }
+  }, [currentUrl]);
 
   // Poll for status changes (Cross-device sync)
   useEffect(() => {
+    // Only poll if we are not done & we haven't taken an image locally
+    if (status === 'complete' || image) return;
+
     let intervalId: NodeJS.Timeout;
 
     const checkStatus = async () => {
         try {
             const res = await fetch(`/api/measure/status?orderId=${orderId}`);
             const data = await res.json();
-            if (data.success && data.completed) {
-                setStatus('complete');
-                clearInterval(intervalId);
+            
+            if (data.success) {
+                if (data.items && Array.isArray(data.items)) {
+                    // Merge server items with local completion state to prevent race conditions
+                    const mergedItems = data.items.map((srvItem: any) => {
+                         if (localCompletedIds.has(srvItem.id)) {
+                             return { ...srvItem, status: 'complete' };
+                         }
+                         return srvItem;
+                    });
+
+                    setItems(mergedItems);
+                    
+                    // Find first pending item
+                    const pendingItem = mergedItems.find((i: any) => i.status !== 'complete');
+                    if (pendingItem) {
+                         // Only update active item if it's different (avoids flicks)
+                         setActiveItemId(prev => prev === pendingItem.id ? prev : pendingItem.id);
+                    } else if (data.completed || mergedItems.every((i: any) => i.status === 'complete')) {
+                        setStatus('complete');
+                        clearInterval(intervalId);
+                    }
+                } else if (data.completed) {
+                     // Fallback for legacy
+                     setStatus('complete');
+                     clearInterval(intervalId);
+                }
             }
         } catch (e) {
             console.error("Polling error", e);
@@ -35,7 +90,7 @@ export default function MeasurementPage({ params }: { params: Promise<{ orderId:
     intervalId = setInterval(checkStatus, 3000);
 
     return () => clearInterval(intervalId);
-  }, [orderId]);
+  }, [orderId, status, image, localCompletedIds]);
 
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -51,15 +106,40 @@ export default function MeasurementPage({ params }: { params: Promise<{ orderId:
 
   const handleComplete = async (measurements: Measurements) => {
     try {
+      const activeId = activeItemId || (items.length > 0 ? items[0].id : null);
+      
       const res = await fetch('/api/measure/save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orderId, measurements }),
+        body: JSON.stringify({ orderId, measurements, itemId: activeId }),
       });
 
       if (!res.ok) throw new Error('Failed to save');
       
-      setStatus('complete');
+      // Update local state instead of hard navigating
+      setImage(null);
+      // Mark as locally complete so polling doesn't revert us
+      if (activeId) {
+          setLocalCompletedIds(prev => {
+              const next = new Set(prev);
+              next.add(activeId);
+              return next;
+          });
+      }
+      
+      // Update items list locally to reflect validation
+      const updatedItems = items.map(i => i.id === activeId ? { ...i, status: 'complete' } : i);
+      setItems(updatedItems);
+      
+      // Check if any left
+      const nextItem = updatedItems.find(i => i.status !== 'complete');
+      if (nextItem) {
+          setActiveItemId(nextItem.id);
+          alert('Measurement saved! Processing next item...');
+      } else {
+          setStatus('complete');
+      }
+
     } catch (error) {
       console.error(error);
       alert('Error saving measurement. Please try again.');
@@ -92,17 +172,6 @@ export default function MeasurementPage({ params }: { params: Promise<{ orderId:
     );
   }
 
-  const [currentUrl, setCurrentUrl] = useState<string>('');
-  const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-        const url = window.location.href;
-        setCurrentUrl(url);
-        setQrCodeUrl(`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}`);
-    }
-  }, []);
-
   const copyLink = () => {
       navigator.clipboard.writeText(currentUrl);
       setCopied(true);
@@ -114,7 +183,7 @@ export default function MeasurementPage({ params }: { params: Promise<{ orderId:
       <div className="w-full max-w-5xl grid md:grid-cols-2 gap-12 items-center">
         
         {/* Left: Mobile Handoff */}
-        <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-8 lg:p-12 flex flex-col items-center text-center h-full justify-center shadow-2xl">
+        <div className="hidden md:flex bg-zinc-900 border border-zinc-800 rounded-3xl p-8 lg:p-12 flex-col items-center text-center h-full justify-center shadow-2xl">
             {qrCodeUrl && (
              <div className="mb-8 p-4 bg-white rounded-2xl shadow-lg">
                  {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -143,6 +212,14 @@ export default function MeasurementPage({ params }: { params: Promise<{ orderId:
         <div className="flex flex-col items-center text-center md:items-start md:text-left space-y-8 py-8 md:pl-4">
             <div>
                 <h1 className="text-4xl md:text-5xl font-bold mb-6 tracking-tight">Measurement Tool</h1>
+                {items.length > 0 && activeItemId && (
+                    <div className="mb-4 inline-block bg-blue-500/10 border border-blue-500/20 px-4 py-2 rounded-lg text-blue-400 font-mono text-sm">
+                        Measuring: {items.find(i => i.id === activeItemId)?.name || 'Unknown Item'}
+                        <span className="ml-2 opacity-50">
+                             ({items.filter(i => i.status === 'complete').length + 1} / {items.length})
+                        </span>
+                    </div>
+                )}
                 <p className="text-zinc-400 text-lg max-w-md bg-zinc-900/30 p-4 rounded-xl border border-zinc-800/30">
                     We just need one photo to calculate your perfect fit.
                 </p>
@@ -171,10 +248,12 @@ export default function MeasurementPage({ params }: { params: Promise<{ orderId:
             <div className="pt-4">
                 <label className="cursor-pointer group relative overflow-hidden bg-white text-black font-bold py-5 px-10 rounded-full hover:bg-zinc-200 transition-all transform hover:scale-105 inline-flex items-center gap-3 text-lg shadow-lg active:scale-95">
                     <Upload className="w-6 h-6" />
-                    Upload Photo Instead
+                    <span className="md:hidden">Take Photo</span>
+                    <span className="hidden md:inline">Upload Photo Instead</span>
                     <input 
                         type="file" 
-                        accept="image/*" 
+                        accept="image/*"
+                        capture="environment"
                         className="hidden" 
                         onChange={handleImageUpload}
                     />

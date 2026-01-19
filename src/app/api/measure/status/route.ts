@@ -43,20 +43,51 @@ export async function GET(req: Request) {
         ...(data.order_items || [])
     ];
 
-    const hasKit = allItems.some((item: any) => {
+    // Filter down to just the kits
+    const kitItems = allItems.filter((item: any) => {
         const rawProdId = item.product_id || item.product?.id || item.productId || item.id || '';
         const prodId = typeof rawProdId === 'string' ? rawProdId.toLowerCase() : '';
         return KIT_IDS.includes(prodId);
     });
 
-    const isComplete = data.metafields?.measurement_status === 'complete' || data.metadata?.measurement_status === 'complete';
+    // Expand items with quantity > 1 into individual entries
+    const expandedItems: any[] = [];
+    kitItems.forEach((item: any) => {
+        const qty = item.quantity || 1;
+        for (let i = 0; i < qty; i++) {
+            // Use a composite ID if multiple qty: itemId_index
+            // If qty is 1, just use itemId
+            const instanceId = qty > 1 ? `${item.id}_${i}` : item.id;
+            const instanceName = qty > 1 ? `${item.name || item.title || 'Kit'} (${i + 1})` : (item.name || item.title || 'Kit');
+            
+            // Check status in metafields. 
+            // We'll store per-item status in a metafield key like `measurement_status_${instanceId}`
+            // Or look for a JSON object in `measurement_data`
+            
+            // For now, let's assume we store it in metadata with key `status_${instanceId}`
+            const statusKey = `status_${instanceId}`;
+            const itemStatus = data.metafields?.[statusKey] || data.metadata?.[statusKey] || 'pending';
+
+            expandedItems.push({
+                id: instanceId,
+                name: instanceName,
+                status: itemStatus
+            });
+        }
+    });
+
+    const hasKit = expandedItems.length > 0;
+    const allComplete = expandedItems.length > 0 && expandedItems.every(i => i.status === 'complete');
+    
+    // Fallback for legacy single-status orders
+    const legacyComplete = data.metafields?.measurement_status === 'complete' || data.metadata?.measurement_status === 'complete';
 
     return NextResponse.json({ 
         success: true, 
-        completed: isComplete,
+        completed: allComplete || legacyComplete,
         hasKit,
         orderId: realOrderId,
-        measurements: isComplete ? data.metafields : null 
+        items: expandedItems
     });
   } catch (error) {
     console.error('API Error checking status:', error);
