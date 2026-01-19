@@ -13,7 +13,6 @@
     "node": "20.x"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.86.0",
     "@swatbloc/sdk": "^1.1.1",
     "framer-motion": "^12.23.24",
     "lucide-react": "^0.555.0",

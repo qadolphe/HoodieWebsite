@@ -1,16 +1,8 @@
 import { headers } from 'next/headers'
 import { NextResponse } from 'next/server'
-import Stripe from 'stripe'
-import { createClient } from '@supabase/supabase-js'
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-11-17.clover', // Updated to match your checkout route version
-})
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+import { stripe } from '@/lib/stripe'
+import type Stripe from 'stripe'
+import { swatAdmin } from '@/lib/swatbloc'
 
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET!
 
@@ -31,21 +23,21 @@ export async function POST(req: Request) {
     const orderId = session.metadata?.orderId
 
     if (orderId) {
-      // Update the order with status, payment ID, total amount, and shipping details
-      const sessionData = session as any
-      const { error } = await supabase
-        .from('orders')
-        .update({ 
+      try {
+        // Update the order in SwatBloc instead of Supabase
+        await (swatAdmin as any).collection('orders').update(orderId, { 
           status: 'paid', 
           payment_intent_id: session.payment_intent as string,
           total_amount: session.amount_total,
-          shipping_details: sessionData.shipping_details || sessionData.shipping,
-          customer_email: session.customer_details?.email
-        })
-        .eq('id', orderId)
-
-      if (error) {
-        console.error('Error updating order:', error)
+          metafields: {
+            customer_email: session.customer_details?.email,
+            payment_status: 'confirmed',
+            // Preserve/add existing metadata
+            measurement_status: 'pending' 
+          }
+        });
+      } catch (error) {
+        console.error('Error updating SwatBloc order:', error)
         return NextResponse.json({ error: 'Error updating order' }, { status: 500 })
       }
     }

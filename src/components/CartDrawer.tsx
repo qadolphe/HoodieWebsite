@@ -30,8 +30,9 @@ export default function CartDrawer() {
 
             // 2. Create checkout session via SDK
             const origin = window.location.origin
+            // Pass cart.id as orderId param so Success page knows it immediately
             const checkout = await swat.checkout.create(cart.id, {
-                successUrl: `${origin}/order/success?session_id={CHECKOUT_SESSION_ID}`,
+                successUrl: `${origin}/order/success?session_id={CHECKOUT_SESSION_ID}&orderId=${cart.id}`,
                 cancelUrl: `${origin}${pathname || '/products'}`
             })
 
