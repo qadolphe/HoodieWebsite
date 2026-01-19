@@ -10,15 +10,9 @@ export default $config({
     };
   },
   async run() {
-    const stripeSecret = new sst.Secret("StripeSecretKey");
-    const stripeWebhookSecret = new sst.Secret("StripeWebhookSecret");
-
     const site = new sst.aws.Nextjs("MyWeb", {
-      link: [stripeSecret, stripeWebhookSecret],
       environment: {
         NEXT_PUBLIC_SWATBLOC_KEY: "pk_live_dnX7sfOjZoIhBrisMOQ5J9NFS6Ee1V2W",
-        STRIPE_SECRET_KEY: stripeSecret.value,
-        STRIPE_WEBHOOK_SECRET: stripeWebhookSecret.value,
       }
     });
   },
