@@ -4,6 +4,7 @@ import { useState, use, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import CanvasTool from '@/components/CanvasTool';
 import { Upload, CheckCircle } from 'lucide-react';
+import { Measurements } from '@/types';
 
 export default function MeasurementPage({ params }: { params: Promise<{ orderId: string }> }) {
   const { orderId } = use(params);
@@ -23,17 +24,14 @@ export default function MeasurementPage({ params }: { params: Promise<{ orderId:
             const data = await res.json();
             if (data.success && data.completed) {
                 setStatus('complete');
-                clearInterval(intervalId); // Stop polling
+                clearInterval(intervalId);
             }
         } catch (e) {
             console.error("Polling error", e);
         }
     };
 
-    // Initial check
     checkStatus();
-
-    // Poll every 3 seconds
     intervalId = setInterval(checkStatus, 3000);
 
     return () => clearInterval(intervalId);
@@ -51,7 +49,7 @@ export default function MeasurementPage({ params }: { params: Promise<{ orderId:
     }
   };
 
-  const handleComplete = async (measurements: any) => {
+  const handleComplete = async (measurements: Measurements) => {
     try {
       const res = await fetch('/api/measure/save', {
         method: 'POST',
@@ -61,9 +59,7 @@ export default function MeasurementPage({ params }: { params: Promise<{ orderId:
 
       if (!res.ok) throw new Error('Failed to save');
       
-      setStatus('complete'); // Update local status immediately
-      // Optionally redirect
-      // router.push(`/order/success?measurements=saved&id=${orderId}`); 
+      setStatus('complete');
     } catch (error) {
       console.error(error);
       alert('Error saving measurement. Please try again.');
@@ -112,7 +108,6 @@ export default function MeasurementPage({ params }: { params: Promise<{ orderId:
         {/* Left: Mobile Handoff */}
         <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-8 flex flex-col items-center text-center h-full justify-center">
              <div className="mb-6 p-4 bg-white rounded-xl">
-                 {/* QR Code */}
                  {/* eslint-disable-next-line @next/next/no-img-element */}
                  <img src={qrCodeUrl} alt="Scan to Measure on Phone" className="w-40 h-40 mix-blend-multiply" />
              </div>

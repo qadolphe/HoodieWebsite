@@ -23,3 +23,9 @@ export interface ProductVariant {
     stock_quantity: number
     created_at: string
 }
+
+export interface Measurements {
+    raw_height: string
+    final_cut_height: string
+    ppi: number
+}

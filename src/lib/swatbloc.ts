@@ -1,4 +1,5 @@
 import { SwatBloc } from '@swatbloc/sdk'
+import { Product } from '@/types'
 
 // Initialize with public API key from environment
 const apiKey = process.env.NEXT_PUBLIC_SWATBLOC_KEY
@@ -16,7 +17,7 @@ export const swatAdmin = new SwatBloc(privateKey || apiKey || '')
 /**
  * Maps SDK product data to local Product structure
  */
-export function mapSDKProduct(data: any) {
+export function mapSDKProduct(data: any): Product | null {
     if (!data) return null
 
     // Price is in cents in SDK, convert to dollars
@@ -25,12 +26,12 @@ export function mapSDKProduct(data: any) {
 
     return {
         id: data.id,
-        name: data.title, // SDK uses title
-        description: data.description,
+        name: data.title || data.name || 'Untitled Product', 
+        description: data.description || '',
         base_price: basePrice,
-        type: data.category === 'service' ? 'service' : 'kit',
-        image_url: data.images?.[0] ?? data.image_url ?? null,
-        slug: data.slug,
-        created_at: data.created_at
+        type: data.type || (data.category === 'service' ? 'service' : 'kit'),
+        image_url: data.images?.[0] || data.image_url || null,
+        slug: data.slug || '',
+        created_at: data.created_at || new Date().toISOString()
     }
 }

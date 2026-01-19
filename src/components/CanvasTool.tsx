@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { CheckCircle } from 'lucide-react';
+import { Measurements } from '@/types';
 
 interface Point { x: number; y: number }
 interface Rect { x: number; y: number; width: number; height: number }
@@ -24,7 +25,7 @@ function Button({ onClick, className = '', children, variant = 'default' }: { on
     );
 }
 
-export default function CanvasTool({ imageUrl, onComplete }: { imageUrl: string, onComplete: (data: any) => void }) {
+export default function CanvasTool({ imageUrl, onComplete }: { imageUrl: string, onComplete: (data: Measurements) => void }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [step, setStep] = useState<'calibrate' | 'measure'>('calibrate');
   
@@ -37,7 +38,7 @@ export default function CanvasTool({ imageUrl, onComplete }: { imageUrl: string,
   // Measure State
   const [measurePoints, setMeasurePoints] = useState<Point[]>([]);
 
-  // 1. Load Image & Init Rect
+  // Load Image & Initialize Rect
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -52,7 +53,6 @@ export default function CanvasTool({ imageUrl, onComplete }: { imageUrl: string,
       canvas.width = window.innerWidth;
       canvas.height = window.innerWidth * aspectRatio;
       
-      // Initialize Card Rect in center if not set
       if (!cardRect) {
           const w = canvas.width * 0.4;
           const h = w / 1.586; // Credit card aspect ratio 85.6mm / 53.98mm ~= 1.586

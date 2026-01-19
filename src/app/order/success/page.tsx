@@ -6,7 +6,6 @@ import { useCart } from '@/hooks/useCart'
 import Link from 'next/link'
 import { CheckCircle, ArrowRight, Ruler, Loader2 } from 'lucide-react'
 
-// Helper to keep state across renders
 function SuccessContent() {
     const searchParams = useSearchParams()
     const sessionId = searchParams.get('session_id')
@@ -27,8 +26,6 @@ function SuccessContent() {
         // Only run on client, once hydrated, once we have a session, and not already processed
         if (!mounted || !_hasHydrated || processed || !sessionId) return;
 
-        console.log('Success page active. Items in cart:', items.length);
-
         // 1. Check for Kits in the cart *before* clearing
         const kitFound = items.some(item => 
             item.type === 'kit' || 
@@ -36,8 +33,6 @@ function SuccessContent() {
             item.slug?.toLowerCase().includes('kit')
         );
         
-        console.log('Kit detection result:', kitFound);
-
         if (kitFound) {
             setHasKit(true);
         }
