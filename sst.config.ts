@@ -10,9 +10,13 @@ export default $config({
     };
   },
   async run() {
+    const swatBlocSecret = new sst.Secret("SwatBlocSecret");
+
     const site = new sst.aws.Nextjs("MyWeb", {
+      link: [swatBlocSecret],
       environment: {
         NEXT_PUBLIC_SWATBLOC_KEY: "pk_live_dnX7sfOjZoIhBrisMOQ5J9NFS6Ee1V2W",
+        NEXT_PRIVATE_SWATBLOC_KEY: swatBlocSecret.value,
       }
     });
   },
