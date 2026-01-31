@@ -25,12 +25,22 @@ export default function RootLayout({
       <head>
           <script dangerouslySetInnerHTML={{
             __html: `
-              if (typeof window !== 'undefined' && !window.ethereum) {
-                  // Prevent "undefined is not an object" errors from wallet injectors
-                  try {
-                    window.ethereum = window.ethereum || {};
-                  } catch (e) {}
-              }
+              // MUST run first - polyfill browser injection variables
+              try {
+                  // Firefox mobile injects __firefox__ with dynamic methods
+                  if (typeof __firefox__ === 'undefined') {
+                      window.__firefox__ = new Proxy({ reader: {} }, {
+                          get: function(target, prop) {
+                              if (prop in target) return target[prop];
+                              return function() {};
+                          }
+                      });
+                  }
+                  // Wallet injectors
+                  if (typeof ethereum === 'undefined') {
+                      window.ethereum = {};
+                  }
+              } catch(e) {}
             `
           }} />
       </head>
