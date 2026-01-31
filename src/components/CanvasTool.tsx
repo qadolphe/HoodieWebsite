@@ -1,38 +1,43 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { CheckCircle, Loader2 } from 'lucide-react';
+import { CheckCircle, Loader2, RefreshCcw } from 'lucide-react';
 import { Measurements } from '@/types';
-// Dynamically imported inside useEffect to avoid SSR issues
-// import { InteractiveSegmenter, FilesetResolver } from '@mediapipe/tasks-vision';
 
+// --- GLOBAL SINGLETON TO PREVENT IOS CRASHES ---
+// This prevents React Strict Mode from double-initializing the heavy WASM binary
+let segmenterInstance: any = null;
+let isLoadingSegmenter = false;
+
+// --- TYPES ---
 interface Point { x: number; y: number }
 interface Rect { x: number; y: number; width: number; height: number }
 interface SegmentBounds { top: number; bottom: number; left: number; right: number; centerX: number }
 
-// Simple Button component
-function Button({ onClick, disabled, className = '', children, variant = 'default' }: { onClick: () => void, disabled?: boolean, className?: string, children: React.ReactNode, variant?: 'default' | 'primary' }) {
-    const baseStyle = "flex items-center justify-center px-4 py-3 rounded-lg font-medium transition-colors disabled:opacity-50";
-    const variants = {
-        default: "bg-zinc-800 text-white hover:bg-zinc-700",
-        primary: "bg-white text-black hover:bg-zinc-200"
-    };
-    
-    return (
-        <button 
-            onClick={onClick} 
-            disabled={disabled}
-            className={`${baseStyle} ${variants[variant]} ${className}`}
-        >
-            {children}
-        </button>
-    );
+// --- UI COMPONENTS ---
+function Button({ onClick, disabled, className = '', children, variant = 'default' }: any) {
+  const baseStyle = "flex items-center justify-center px-4 py-3 rounded-lg font-medium transition-colors disabled:opacity-50 touch-manipulation active:scale-95 duration-100";
+  const variants: any = {
+    default: "bg-zinc-800 text-white hover:bg-zinc-700 active:bg-zinc-600",
+    primary: "bg-blue-600 text-white hover:bg-blue-500 active:bg-blue-700",
+    secondary: "bg-zinc-100 text-black hover:bg-zinc-200 active:bg-zinc-300"
+  };
+  return (
+    <button onClick={onClick} disabled={disabled} className={`${baseStyle} ${variants[variant]} ${className}`}>
+      {children}
+    </button>
+  );
 }
 
+// --- MAIN COMPONENT ---
 export default function CanvasTool({ imageUrl, onComplete }: { imageUrl: string, onComplete: (data: Measurements) => void }) {
+  // State
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const sourceImageRef = useRef<HTMLImageElement | null>(null);
+  
   const [step, setStep] = useState<'calibrate' | 'segment'>('calibrate');
+  const [isModelReady, setIsModelReady] = useState(false);
+  const [isSegmenting, setIsSegmenting] = useState(false);
   
   // Calibration State
   const [cardRect, setCardRect] = useState<Rect | null>(null);
@@ -41,424 +46,382 @@ export default function CanvasTool({ imageUrl, onComplete }: { imageUrl: string,
   const [initialDragRect, setInitialDragRect] = useState<Rect | null>(null);
 
   // Segmentation State
-  const [isSegmenting, setIsSegmenting] = useState(false);
   const [segmentBounds, setSegmentBounds] = useState<SegmentBounds | null>(null);
   const [tapPoint, setTapPoint] = useState<Point | null>(null);
-  // Type as 'any' or generic object since we don't import the type statically
-  const [segmenter, setSegmenter] = useState<any>(null);
 
-  // Initialize MediaPipe Segmenter
+  // --- 1. ROBUST MODEL INITIALIZATION ---
   useEffect(() => {
-    const loadSegmenter = async () => {
-      try {
-        const { InteractiveSegmenter, FilesetResolver } = await import('@mediapipe/tasks-vision');
+  const initModel = async () => {
+    if (segmenterInstance) {
+      setIsModelReady(true);
+      return;
+    }
+    if (isLoadingSegmenter) return;
+
+    isLoadingSegmenter = true;
+
+    try {
+    console.log("Loading MediaPipe...");
         
+    // Dynamic import to avoid SSR errors
+    const { InteractiveSegmenter, FilesetResolver } = await import('@mediapipe/tasks-vision');
+
+    // CRITICAL FIX: Hardcoded version ensures JS and WASM match exactly
         const vision = await FilesetResolver.forVisionTasks(
-          "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.32/wasm"
+          "/mediapipe"
         );
-        const newSegmenter = await InteractiveSegmenter.createFromOptions(vision, {
-          baseOptions: {
-            modelAssetPath: "https://storage.googleapis.com/mediapipe-models/interactive_segmenter/magic_touch/float32/1/magic_touch.tflite",
-            delegate: "CPU"
-          },
-          outputCategoryMask: true,
-          outputConfidenceMasks: false,
-        });
-        setSegmenter(newSegmenter);
-        console.log("MediaPipe Segmenter loaded");
-      } catch (error) {
-        console.error("Error loading segmenter:", error);
-      }
-    };
-    loadSegmenter();
+
+    segmenterInstance = await InteractiveSegmenter.createFromOptions(vision, {
+      baseOptions: {
+      // Using the 'Magic Touch' model which is optimized for interactions
+      modelAssetPath: "https://storage.googleapis.com/mediapipe-models/interactive_segmenter/magic_touch/float32/1/magic_touch.tflite",
+      delegate: "CPU" // FORCE CPU: GPU is unstable on iOS Safari/Webkit
+      },
+      outputCategoryMask: true,
+      outputConfidenceMasks: false,
+    });
+
+    console.log("Segmenter Loaded!");
+    setIsModelReady(true);
+    } catch (error) {
+    console.error("CRITICAL MODEL FAILURE:", error);
+    alert("Failed to load AI model. Please refresh.");
+    } finally {
+    isLoadingSegmenter = false;
+    }
+  };
+
+  initModel();
   }, []);
 
-  // Load Image
+  // --- 2. IMAGE LOADING & SETUP ---
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+  const canvas = canvasRef.current;
+  if (!canvas) return;
+
+  const img = new Image();
+  img.src = imageUrl;
+  img.crossOrigin = "anonymous"; // Necessary for canvas manipulation
     
-    const img = new Image();
-    img.src = imageUrl;
-    img.crossOrigin = "anonymous";
-    img.onload = () => {
-      sourceImageRef.current = img;
-      const aspectRatio = img.height / img.width;
-      canvas.width = window.innerWidth;
-      canvas.height = Math.floor(window.innerWidth * aspectRatio);
+  img.onload = () => {
+    sourceImageRef.current = img;
       
-      if (!cardRect) {
-          const w = canvas.width * 0.4;
-          const h = w / 1.586; // Credit card aspect ratio
-          setCardRect({
-              x: (canvas.width - w) / 2,
-              y: (canvas.height - h) / 2,
-              width: w,
-              height: h
-          });
-      }
+    // Calculate layout
+    const aspectRatio = img.height / img.width;
+    const displayWidth = window.innerWidth;
+    const displayHeight = Math.floor(displayWidth * aspectRatio);
+
+    // Set canvas dimensions
+    canvas.width = displayWidth;
+    canvas.height = displayHeight;
+
+    // Initial Card Position (Center)
+    if (!cardRect) {
+      const w = displayWidth * 0.4; // 40% of screen width
+      const h = w / 1.586; // Credit card aspect ratio
+      setCardRect({
+        x: (displayWidth - w) / 2,
+        y: (displayHeight - h) / 2,
+        width: w,
+        height: h
+      });
+    }
       
-      draw(ctx, canvas, img);
-    };
+    // Initial Draw
+    const ctx = canvas.getContext('2d');
+    if(ctx) draw(ctx, canvas, img);
+  };
   }, [imageUrl]);
 
-  // Redraw on state changes
+  // --- 3. DRAW LOOP (Reacts to state changes) ---
   useEffect(() => {
-      const canvas = canvasRef.current;
-      if (!canvas) return;
-      const ctx = canvas.getContext('2d');
-      if (!ctx || !cardRect) return;
+    const canvas = canvasRef.current;
+    const img = sourceImageRef.current;
+    if (!canvas || !img) return;
       
-      const img = new Image();
-      img.src = imageUrl;
-      img.crossOrigin = "anonymous";
-      
-      if (img.complete && img.naturalWidth !== 0) {
-        draw(ctx, canvas, img);
-      } else {
-        img.onload = () => draw(ctx, canvas, img);
-      }
-  }, [cardRect, step, imageUrl, segmentBounds, tapPoint]);
+    const ctx = canvas.getContext('2d');
+    if (ctx) draw(ctx, canvas, img);
+  }, [cardRect, step, segmentBounds, tapPoint, isSegmenting]);
 
   const draw = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, img: HTMLImageElement) => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    // Clear & Draw Base Image
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-      if (step === 'calibrate' && cardRect) {
-          // Semi-transparent fill
-          ctx.beginPath();
-          ctx.roundRect(cardRect.x, cardRect.y, cardRect.width, cardRect.height, 10);
-          ctx.fillStyle = 'rgba(59, 130, 246, 0.3)';
-          ctx.fill();
+    // Draw Calibration Box
+    if (step === 'calibrate' && cardRect) {
+      // Semi-transparent fill
+      ctx.fillStyle = 'rgba(59, 130, 246, 0.2)';
+      ctx.beginPath();
+      ctx.roundRect(cardRect.x, cardRect.y, cardRect.width, cardRect.height, 8);
+      ctx.fill();
 
-          // Border
-          ctx.strokeStyle = '#3b82f6';
-          ctx.lineWidth = 3;
-          ctx.stroke();
+      // Border
+      ctx.strokeStyle = '#3b82f6';
+      ctx.lineWidth = 3;
+      ctx.stroke();
 
-          // Corner handles
-          const handleSize = 6;
-          ctx.fillStyle = '#fff';
-          const corners = [
-              { x: cardRect.x, y: cardRect.y },
-              { x: cardRect.x + cardRect.width, y: cardRect.y },
-              { x: cardRect.x, y: cardRect.y + cardRect.height },
-              { x: cardRect.x + cardRect.width, y: cardRect.y + cardRect.height },
-          ];
-          
-          corners.forEach(c => {
-             ctx.beginPath();
-             ctx.arc(c.x, c.y, handleSize, 0, 2 * Math.PI);
-             ctx.fill();
-             ctx.stroke();
-          });
+      // Corner Handles
+      ctx.fillStyle = 'white';
+      const corners = [
+        { x: cardRect.x, y: cardRect.y }, // TL
+        { x: cardRect.x + cardRect.width, y: cardRect.y }, // TR
+        { x: cardRect.x, y: cardRect.y + cardRect.height }, // BL
+        { x: cardRect.x + cardRect.width, y: cardRect.y + cardRect.height } // BR
+      ];
+      corners.forEach(c => {
+        ctx.beginPath();
+        ctx.arc(c.x, c.y, 6, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.stroke();
+      });
+    }
+
+    // Draw Segmentation Results
+    if (step === 'segment') {
+      // Draw Tap Point
+      if (tapPoint) {
+        ctx.beginPath();
+        ctx.arc(tapPoint.x, tapPoint.y, 10, 0, 2 * Math.PI);
+        ctx.fillStyle = '#3b82f6';
+        ctx.fill();
+        ctx.strokeStyle = 'white';
+        ctx.lineWidth = 2;
+        ctx.stroke();
       }
 
-      if (step === 'segment') {
-          // Show tap point
-          if (tapPoint) {
-              ctx.beginPath();
-              ctx.arc(tapPoint.x, tapPoint.y, 12, 0, 2 * Math.PI);
-              ctx.fillStyle = 'rgba(59, 130, 246, 0.5)';
-              ctx.fill();
-              ctx.strokeStyle = '#3b82f6';
-              ctx.lineWidth = 3;
-              ctx.stroke();
-          }
-
-          // Show segmented bounds
-          if (segmentBounds) {
-              // Draw bounding box
-              const { top, bottom, left, right, centerX } = segmentBounds;
+      // Draw Bounding Box
+      if (segmentBounds) {
+        const { top, bottom, left, right, centerX } = segmentBounds;
               
-              ctx.strokeStyle = 'rgba(34, 197, 94, 0.5)';
-              ctx.lineWidth = 2;
-              ctx.setLineDash([5, 5]);
-              ctx.strokeRect(left, top, right - left, bottom - top);
-              ctx.setLineDash([]);
-
-              // Draw measurement line (top to bottom at center)
-              ctx.beginPath();
-              ctx.moveTo(centerX, top);
-              ctx.lineTo(centerX, bottom);
-              ctx.strokeStyle = '#22c55e';
-              ctx.lineWidth = 3;
-              ctx.stroke();
-
-              // Top point
-              ctx.beginPath();
-              ctx.arc(centerX, top, 8, 0, 2 * Math.PI);
-              ctx.fillStyle = '#22c55e';
-              ctx.fill();
-              ctx.strokeStyle = 'white';
-              ctx.lineWidth = 2;
-              ctx.stroke();
-
-              // Bottom point
-              ctx.beginPath();
-              ctx.arc(centerX, bottom, 8, 0, 2 * Math.PI);
-              ctx.fillStyle = '#22c55e';
-              ctx.fill();
-              ctx.strokeStyle = 'white';
-              ctx.lineWidth = 2;
-              ctx.stroke();
-          }
+        // Dashed Box
+        ctx.strokeStyle = '#22c55e'; // Green
+        ctx.lineWidth = 3;
+        ctx.setLineDash([10, 5]);
+        ctx.strokeRect(left, top, right - left, bottom - top);
+              
+        // Solid Center Line
+        ctx.setLineDash([]);
+        ctx.beginPath();
+        ctx.moveTo(centerX, top);
+        ctx.lineTo(centerX, bottom);
+        ctx.strokeStyle = '#22c55e';
+        ctx.stroke();
       }
+    }
   };
 
-  // --- Interaction Logic ---
-
-  const getCanvasPoint = (e: React.MouseEvent | React.TouchEvent) => {
-      const canvas = canvasRef.current;
-      if (!canvas) return { x: 0, y: 0 };
-      const rect = canvas.getBoundingClientRect();
-      const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
-      const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
-      return {
-          x: clientX - rect.left,
-          y: clientY - rect.top
-      };
-  };
-
-  const handleStart = (e: React.MouseEvent | React.TouchEvent) => {
-      const p = getCanvasPoint(e);
-
-      if (step === 'calibrate' && cardRect) {
-          const handleRadius = 30;
-          const isNear = (x1: number, y1: number, x2: number, y2: number) => Math.hypot(x1-x2, y1-y2) < handleRadius;
-
-          let mode = null;
-          if (isNear(p.x, p.y, cardRect.x, cardRect.y)) mode = 'resize-tl';
-          else if (isNear(p.x, p.y, cardRect.x + cardRect.width, cardRect.y)) mode = 'resize-tr';
-          else if (isNear(p.x, p.y, cardRect.x, cardRect.y + cardRect.height)) mode = 'resize-bl';
-          else if (isNear(p.x, p.y, cardRect.x + cardRect.width, cardRect.y + cardRect.height)) mode = 'resize-br';
-          else if (p.x > cardRect.x && p.x < cardRect.x + cardRect.width && p.y > cardRect.y && p.y < cardRect.y + cardRect.height) {
-              mode = 'drag';
-          }
-          
-          setInteractionMode(mode);
-
-          if (mode) {
-              setDragStart(p);
-              setInitialDragRect({ ...cardRect });
-          }
-      }
-
-      // Tap to segment in segment mode
-      if (step === 'segment' && !isSegmenting) {
-          runSegmentation(p);
-      }
-  };
-
+  // --- 4. CORE LOGIC: SEGMENTATION ---
   const runSegmentation = async (p: Point) => {
+    // Safety Checks
+    if (!segmenterInstance || !sourceImageRef.current || !canvasRef.current) return;
+      
+    setTapPoint(p);
+    setSegmentBounds(null);
+    setIsSegmenting(true);
+
+    try {
       const canvas = canvasRef.current;
-      if (!canvas || !segmenter || !sourceImageRef.current) return;
-
-      setTapPoint(p);
-      setSegmentBounds(null);
-      setIsSegmenting(true);
-
-      try {
-          // Create an ImageBitmap - this is GPU-ready and most reliable for MediaPipe
-          const bitmap = await createImageBitmap(sourceImageRef.current);
           
-          // Normalized coordinates (0-1)
-          const normX = p.x / canvas.width;
-          const normY = p.y / canvas.height;
+      // Convert click to 0-1 normalized coordinates
+      const normX = p.x / canvas.width;
+      const normY = p.y / canvas.height;
 
-          segmenter.segment(
-              bitmap,
-              { keypoint: { x: normX, y: normY } },
-              (result: any) => {
-                  bitmap.close(); // Clean up the bitmap
+      // RUN MODEL (CPU Mode)
+      segmenterInstance.segment(
+        sourceImageRef.current, // Pass the HTMLImageElement directly
+        { keypoint: { x: normX, y: normY } },
+        (result: any) => {
+          if (!result.categoryMask) {
+            setIsSegmenting(false);
+            return;
+          }
                   
-                  if (!result.categoryMask) {
-                      setIsSegmenting(false);
-                      return;
-                  }
-                  
-                  const { width, height, getAsUint8Array } = result.categoryMask;
-                  const mask = getAsUint8Array();
+          // Process Mask (Find bounds)
+          const { width, height, getAsUint8Array } = result.categoryMask;
+          const mask = getAsUint8Array();
 
-                  let minX = width, maxX = 0, minY = height, maxY = 0;
-                  let found = false;
+          let minX = width, maxX = 0, minY = height, maxY = 0;
+          let found = false;
 
-                  for (let i = 0; i < mask.length; i++) {
-                      if (mask[i] > 0) { 
-                          found = true;
-                          const x = i % width;
-                          const y = Math.floor(i / width);
+          for (let i = 0; i < mask.length; i++) {
+            if (mask[i] > 0) { 
+              found = true;
+              const x = i % width;
+              const y = Math.floor(i / width);
                           
-                          if (x < minX) minX = x;
-                          if (x > maxX) maxX = x;
-                          if (y < minY) minY = y;
-                          if (y > maxY) maxY = y;
-                      }
-                  }
+              if (x < minX) minX = x;
+              if (x > maxX) maxX = x;
+              if (y < minY) minY = y;
+              if (y > maxY) maxY = y;
+            }
+          }
 
-                  if (found) {
-                       // Scale bounds back to canvas size
-                       const scaleX = canvas.width / width;
-                       const scaleY = canvas.height / height;
+          if (found) {
+             // Scale mask coordinates back to screen space
+             const scaleX = canvas.width / width;
+             const scaleY = canvas.height / height;
                        
-                       setSegmentBounds({
-                           left: minX * scaleX,
-                           right: maxX * scaleX,
-                           top: minY * scaleY,
-                           bottom: maxY * scaleY,
-                           centerX: ((minX + maxX) / 2) * scaleX
-                       });
-                  } else {
-                      alert('No object found at tap location.');
-                  }
-                  setIsSegmenting(false);
-              }
-          );
-      } catch (error) {
-          console.error('Segmentation error:', error);
-          alert('Segmentation failed. Please try again.');
+             setSegmentBounds({
+               left: minX * scaleX,
+               right: maxX * scaleX,
+               top: minY * scaleY,
+               bottom: maxY * scaleY,
+               centerX: ((minX + maxX) / 2) * scaleX
+             });
+          }
           setIsSegmenting(false);
-      }
+        }
+      );
+    } catch (e) {
+      console.error(e);
+      setIsSegmenting(false);
+    }
   };
 
-  const handleMove = (e: React.MouseEvent | React.TouchEvent) => {
-      if (step !== 'calibrate' || !interactionMode || !dragStart || !initialDragRect) return;
-      e.preventDefault();
+  // --- 5. INTERACTION HANDLERS (Touch/Mouse) ---
+  const getPoint = (e: any) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return { x: 0, y: 0 };
+    const r = canvas.getBoundingClientRect();
+    const cx = e.touches ? e.touches[0].clientX : e.clientX;
+    const cy = e.touches ? e.touches[0].clientY : e.clientY;
+    return { x: cx - r.left, y: cy - r.top };
+  };
 
-      const p = getCanvasPoint(e);
-      const dx = p.x - dragStart.x;
-      const dy = p.y - dragStart.y;
-      const newRect = { ...initialDragRect };
-      
-      const CARD_ASPECT = 85.6 / 53.98;
+  const handleStart = (e: any) => {
+    const p = getPoint(e);
 
-      if (interactionMode === 'drag') {
-          newRect.x += dx;
-          newRect.y += dy;
-      } else {
-          let newW = initialDragRect.width;
+    if (step === 'calibrate' && cardRect) {
+      // Check for resize/drag
+      const HIT_AREA = 40;
+      const r = cardRect;
           
-          if (interactionMode === 'resize-br' || interactionMode === 'resize-tr') {
-              newW = initialDragRect.width + dx;
-          } else {
-              newW = initialDragRect.width - dx;
-          }
-
-          if (newW < 50) newW = 50;
-
-          newRect.width = newW;
-          newRect.height = newW / CARD_ASPECT;
-
-          if (interactionMode === 'resize-tl') {
-              newRect.x = (initialDragRect.x + initialDragRect.width) - newRect.width;
-              newRect.y = (initialDragRect.y + initialDragRect.height) - newRect.height;
-          } else if (interactionMode === 'resize-bl') {
-              newRect.x = (initialDragRect.x + initialDragRect.width) - newRect.width;
-          } else if (interactionMode === 'resize-tr') {
-              newRect.y = (initialDragRect.y + initialDragRect.height) - newRect.height;
-          }
+      // Simple corner detection
+      if (Math.hypot(p.x - r.x, p.y - r.y) < HIT_AREA) setInteractionMode('resize-tl');
+      else if (Math.hypot(p.x - (r.x+r.width), p.y - (r.y+r.height)) < HIT_AREA) setInteractionMode('resize-br');
+      else if (p.x > r.x && p.x < r.x + r.width && p.y > r.y && p.y < r.y + r.height) setInteractionMode('drag');
+          
+      if (interactionMode) {
+        setDragStart(p);
+        setInitialDragRect({...r});
       }
+    } else if (step === 'segment' && !isSegmenting && isModelReady) {
+      runSegmentation(p);
+    }
+  };
+
+  const handleMove = (e: any) => {
+    if (!interactionMode || !dragStart || !initialDragRect) return;
+    e.preventDefault(); // Stop scroll while dragging
       
-      setCardRect(newRect);
+    const p = getPoint(e);
+    const dx = p.x - dragStart.x;
+    const dy = p.y - dragStart.y;
+    const r = {...initialDragRect};
+    const ASPECT = 85.6 / 53.98;
+
+    if (interactionMode === 'drag') {
+      setCardRect({ ...r, x: r.x + dx, y: r.y + dy });
+    } else if (interactionMode === 'resize-br') {
+      const w = Math.max(50, r.width + dx);
+      setCardRect({ ...r, width: w, height: w / ASPECT });
+    } else if (interactionMode === 'resize-tl') {
+      const w = Math.max(50, r.width - dx);
+      setCardRect({ 
+        x: (r.x + r.width) - w, 
+        y: (r.y + r.height) - (w / ASPECT), 
+        width: w, 
+        height: w / ASPECT 
+      });
+    }
   };
 
   const handleEnd = () => {
-      setInteractionMode(null);
-      setDragStart(null);
-      setInitialDragRect(null);
+    setInteractionMode(null);
+    setDragStart(null);
   };
 
-  const confirmCalibration = () => {
-    setStep('segment');
-  };
-
-  const calculateResults = () => {
+  // --- 6. FINAL CALCULATIONS ---
+  const finish = () => {
     if (!cardRect || !segmentBounds) return;
-
-    const pixelsPerInch = cardRect.width / 3.375; // Credit card is 3.375" wide
-    const hoodiePixelHeight = segmentBounds.bottom - segmentBounds.top;
-    const realHeightInches = hoodiePixelHeight / pixelsPerInch;
-    const finalCutHeight = realHeightInches + 1.5;
+      
+    // 1. Calculate PPI (Pixels Per Inch)
+    // Standard Credit Card Width = 3.375 inches
+    const ppi = cardRect.width / 3.375;
+      
+    // 2. Calculate Height in Pixels
+    const pixelHeight = segmentBounds.bottom - segmentBounds.top;
+      
+    // 3. Convert to Inches
+    const rawInches = pixelHeight / ppi;
+      
+    // 4. Add "Sewing Allowance" (1.5 inches standard)
+    const finalInches = rawInches + 1.5;
 
     onComplete({
-      raw_height: realHeightInches.toFixed(2),
-      final_cut_height: finalCutHeight.toFixed(2),
-      ppi: pixelsPerInch
+      raw_height: rawInches.toFixed(2),
+      final_cut_height: finalInches.toFixed(2),
+      ppi: ppi
     });
   };
 
-  const resetSegment = () => {
-    setSegmentBounds(null);
-    setTapPoint(null);
-  };
-
   return (
-    <div className="flex flex-col h-[100dvh] bg-black select-none">
-      <div className="p-4 text-white text-center bg-zinc-900 z-10">
-        <h2 className="font-bold text-lg mb-1">
-          {step === 'calibrate' ? 'Calibrate Scale' : 'Tap the Hoodie'}
-        </h2>
-        <p className="text-sm text-zinc-400">
-            {step === 'calibrate' 
-                ? 'Drag corners to match the credit card.' 
-                : 'Tap on the hoodie to detect its bounds.'}
-        </p>
-      </div>
-      
-      <div className="flex-1 overflow-hidden relative flex items-center justify-center bg-black">
-          {isSegmenting && (
-              <div className="absolute inset-0 bg-black/60 z-50 flex flex-col items-center justify-center backdrop-blur-sm">
-                  <Loader2 className="w-12 h-12 text-blue-500 animate-spin mb-4" />
-                  <p className="text-white font-medium">Detecting hoodie...</p>
-              </div>
-          )}
-          <canvas 
-            ref={canvasRef} 
-            onMouseDown={handleStart}
-            onMouseMove={handleMove}
-            onMouseUp={handleEnd}
-            onMouseLeave={handleEnd}
-            onTouchStart={handleStart}
-            onTouchMove={handleMove}
-            onTouchEnd={handleEnd}
-            className="touch-none max-w-full cursor-crosshair"
-            style={{ maxHeight: 'calc(100vh - 150px)' }} 
-          />
-      </div>
-
-      <div className="p-6 bg-zinc-900 w-full z-10 flex gap-4">
-        {step === 'calibrate' ? (
-           <>
-              <Button onClick={() => {
-                  setInteractionMode(null);
-                  setCardRect(null);
-              }} className="flex-1" variant="default">Reset</Button>
-              <Button 
-                onClick={confirmCalibration} 
-                className="flex-[2]" 
-                variant="primary"
-               >
-                Confirm Card <CheckCircle className="ml-2 w-4 h-4" />
-              </Button>
-           </>
-        ) : (
-            <>
-              <Button onClick={resetSegment} className="flex-1" variant="default">
-                {segmentBounds ? 'Retry' : 'Reset'}
-              </Button>
-              <Button 
-                onClick={calculateResults} 
-                disabled={!segmentBounds}
-                className="flex-[2]" 
-                variant="primary"
-              >
-                Calculate Fit
-              </Button>
-            </>
-        )}
-      </div>
+  <div className="flex flex-col h-[100dvh] bg-black">
+    {/* HEADER */}
+    <div className="p-4 bg-zinc-900 text-center z-10 shrink-0">
+      <h2 className="text-white font-bold text-lg">
+        {step === 'calibrate' ? 'Scale Calibration' : 'Tap Your Hoodie'}
+      </h2>
+      <p className="text-zinc-400 text-sm">
+        {step === 'calibrate' ? 'Resize box to match your card' : 'Tap center of hoodie to measure'}
+      </p>
     </div>
+
+    {/* CANVAS AREA */}
+    <div className="flex-1 relative overflow-hidden bg-zinc-950 flex items-center justify-center">
+      {/* Loading Overlay */}
+      {(isSegmenting || !isModelReady) && step === 'segment' && (
+        <div className="absolute inset-0 bg-black/50 z-50 flex flex-col items-center justify-center backdrop-blur-sm">
+          <Loader2 className="w-10 h-10 text-blue-500 animate-spin mb-3"/>
+          <span className="text-white font-medium">
+            {!isModelReady ? 'Loading AI...' : 'Measuring...'}
+          </span>
+        </div>
+      )}
+          
+      <canvas 
+        ref={canvasRef}
+        className="max-w-full max-h-full touch-none"
+        onMouseDown={handleStart}
+        onMouseMove={handleMove}
+        onMouseUp={handleEnd}
+        onTouchStart={handleStart}
+        onTouchMove={handleMove}
+        onTouchEnd={handleEnd}
+      />
+    </div>
+
+    {/* CONTROLS */}
+    <div className="p-6 bg-zinc-900 z-10 shrink-0 grid grid-cols-2 gap-4">
+      {step === 'calibrate' ? (
+       <>
+         <Button onClick={() => setCardRect(null)} variant="secondary">Reset Box</Button>
+         <Button onClick={() => setStep('segment')} variant="primary">
+           Confirm Scale <CheckCircle className="ml-2 w-4 h-4"/>
+         </Button>
+       </>
+      ) : (
+       <>
+         <Button onClick={() => setSegmentBounds(null)} variant="secondary">
+           <RefreshCcw className="mr-2 w-4 h-4"/> Retry
+         </Button>
+         <Button onClick={finish} disabled={!segmentBounds} variant="primary">
+           Calculate Fit
+         </Button>
+       </>
+      )}
+    </div>
+  </div>
   );
 }

@@ -31,22 +31,27 @@ export default function CartDrawer() {
                 productId: item.id,
                 quantity: item.quantity
             }))
-
+            
             const cart = await swat.cart.create(cartItems)
 
             // 2. Create checkout session via SDK
-            const origin = window.location.origin
-            // Pass cart.id as orderId param so Success page knows it immediately
+            // Construct the base URL carefully to handle Ngrok vs Localhost
+            let origin = process.env.NEXT_PUBLIC_URL || (typeof window !== 'undefined' ? window.location.origin : '')
+            origin = origin.replace(/\/$/, '') // Remove trailing slash
+
+            const successUrl = `${origin}/order/success?orderId=${cart.id}`
+            const cancelUrl = `${origin}${pathname || '/products'}`
+
             const checkout = await swat.checkout.create(cart.id, {
-                successUrl: `${origin}/order/success?session_id={CHECKOUT_SESSION_ID}&orderId=${cart.id}`,
-                cancelUrl: `${origin}${pathname || '/products'}`
+                successUrl,
+                cancelUrl
             })
 
             // 3. Redirect to Stripe checkout
             if (checkout.url) {
                 window.location.href = checkout.url
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error checking out:', error)
         } finally {
             setIsLoading(false)

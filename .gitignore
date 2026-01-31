@@ -21,6 +21,7 @@
 # Misc
 .DS_Store
 *.pem
+*.csv
 
 # Debug
 npm-debug.log*
@@ -72,5 +73,12 @@ supabase/functions/**/.env
 ehthumbs.db
 Thumbs.db
 
+# MediaPipe Assets (Copied from node_modules)
+/public/mediapipe/
+/public/mediapipe-nosimd/
 
-package-lock.json
+# Temporary Scripts & Debugging
+debug-*.ts
+test-*.ts
+check-*.ts
+compare-*.ts
