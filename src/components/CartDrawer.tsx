@@ -47,7 +47,7 @@ export default function CartDrawer() {
                 cancelUrl
             })
 
-            // 3. Redirect to Stripe checkout
+            // 3. Redirect to checkout
             if (checkout.url) {
                 window.location.href = checkout.url
             }

@@ -78,7 +78,7 @@ export default async function ProductDetailPage({ params }: Props) {
                             className={styles.addToCartButton}
                         />
                         <p className={styles.secureText}>
-                            Secure checkout powered by Stripe
+                            Secure checkout powered by SwatBloc
                         </p>
                     </div>
                 </div>
