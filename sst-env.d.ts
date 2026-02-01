@@ -9,15 +9,7 @@ declare module "sst" {
       "type": "sst.aws.Nextjs"
       "url": string
     }
-    "StripeSecretKey": {
-      "type": "sst.sst.Secret"
-      "value": string
-    }
-    "StripeWebhookSecret": {
-      "type": "sst.sst.Secret"
-      "value": string
-    }
-    "SupabaseServiceRoleKey": {
+    "SwatBlocSecret": {
       "type": "sst.sst.Secret"
       "value": string
     }

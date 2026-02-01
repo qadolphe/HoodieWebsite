@@ -7,10 +7,11 @@ import { useProducts } from '@/hooks/useProducts'
 import styles from './page.module.css'
 import ProductCard from '@/components/ProductCard'
 import SkeletonCard from '@/components/SkeletonCard'
+import { KIT_IDS } from '@/lib/constants'
 
 export default function KitsPage() {
-    // 1. Fetch the 3 specific kits
-    const { products, loading } = useProducts(['refill-kit', 'essentials-kit', 'all-in-one-kit'])
+    // 1. Fetch the 3 specific kits by ID
+    const { products, loading } = useProducts(KIT_IDS)
 
     // 2. Focus Observer
     const [focusedCardId, setFocusedCardId] = useState<string | null>(null)

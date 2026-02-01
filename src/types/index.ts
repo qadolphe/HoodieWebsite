@@ -7,6 +7,11 @@ export interface Product {
     image_url: string | null
     slug: string
     created_at: string
+    ui?: {
+        buttonText: string
+        linkPrefix: string
+        features: string[]
+    }
 }
 
 export interface ProductVariant {
@@ -17,4 +22,10 @@ export interface ProductVariant {
     sku: string | null
     stock_quantity: number
     created_at: string
+}
+
+export interface Measurements {
+    raw_height: string
+    final_cut_height: string
+    ppi: number
 }

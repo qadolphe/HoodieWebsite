@@ -1,31 +1,34 @@
+'use client'
+
 import { useState, useEffect } from 'react'
-import { supabase } from '@/lib/supabase'
+import { swat, mapSDKProduct } from '@/lib/swatbloc'
+import { PRODUCT_IDS } from '@/lib/constants'
 
 const UI_CONFIG: Record<string, any> = {
     // KITS
-    'refill-kit': {
+    [PRODUCT_IDS.REFILL_KIT]: {
         buttonText: 'View Details',
         linkPrefix: '/products',
         features: ['Satin Fabric Sheet', 'Pattern Guide', 'Best for Experts']
     },
-    'essentials-kit': {
+    [PRODUCT_IDS.ESSENTIALS_KIT]: {
         buttonText: 'View Details',
         linkPrefix: '/products',
         features: ['Premium Satin Fabric', 'Color-Matched Thread', 'Step-by-Step Guide']
     },
-    'all-in-one-kit': {
+    [PRODUCT_IDS.ALL_IN_ONE_KIT]: {
         buttonText: 'View Details',
         linkPrefix: '/products',
         features: ['Handheld Sewing Machine', 'Essentials Kit Included', 'Complete Beginner Set']
     },
 
     // SERVICES
-    'mail-in-service': {
+    [PRODUCT_IDS.MAIL_IN_SERVICE]: {
         buttonText: 'Start Service',
         linkPrefix: '/services',
         features: ['Professional Sewing', '2-Way Shipping Included', 'Fast Turnaround']
     },
-    'concierge': {
+    [PRODUCT_IDS.CONCIERGE_SERVICE]: {
         buttonText: 'Join Waitlist',
         linkPrefix: '/services',
         features: ['Brand New Hoodie', 'Custom Satin Lining', 'Delivered to Your Door']
@@ -39,46 +42,47 @@ const UI_CONFIG: Record<string, any> = {
     }
 }
 
-export function useProducts(slugs?: string[]) {
+export function useProducts(ids?: string[]) {
     const [products, setProducts] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
         async function fetchProducts() {
             try {
-                // 1. Fetch data (Sorted by price by default from DB)
-                let query = supabase
-                    .from('products')
-                    .select('*')
-                    .order('base_price', { ascending: true })
-
-                if (slugs && slugs.length > 0) {
-                    query = query.in('slug', slugs)
-                }
-
-                const { data, error } = await query
-                if (error) throw error
+                // Fetch products from SwatBloc SDK
+                const data: any[] = await swat.products.list()
 
                 if (data) {
-                    // 2. ENHANCE the data with UI config
-                    let processedData = data.map(product => {
-                        const config = UI_CONFIG[product.slug] || UI_CONFIG['default']
+                    // Filter by IDs if provided
+                    let filteredData = ids && ids.length > 0
+                        ? data.filter((p: any) => ids.includes(p.id))
+                        : data
 
-                        return {
-                            ...product,
-                            ui: config,
-                            name: product.name,
-                            description: product.description,
-                            slug: product.slug,
-                            displayPrice: product.type === 'kit'
-                                ? `Starting from $${product.base_price}`
-                                : `$${product.base_price}`
-                        }
-                    })
+                    // ENHANCE the data with UI config
+                    let processedData = filteredData
+                        .map((product: any) => {
+                            const mapped = mapSDKProduct(product)
+                            if (!mapped) return null
+                            
+                            const config = UI_CONFIG[product.id] || UI_CONFIG['default']
 
-                    if (slugs && slugs.length > 0) {
-                        processedData = processedData.sort((a, b) => {
-                            return slugs.indexOf(a.slug) - slugs.indexOf(b.slug)
+                            return {
+                                ...mapped,
+                                ui: config,
+                                displayPrice: mapped.type === 'kit'
+                                    ? `Starting from $${mapped.base_price}`
+                                    : `$${mapped.base_price}`
+                            }
+                        })
+                        .filter((p): p is NonNullable<typeof p> => p !== null)
+
+                    // De-duplicate by ID (just in case)
+                    processedData = Array.from(new Map(processedData.map(p => [p.id, p])).values())
+
+                    // Sort by original ID order if provided
+                    if (ids && ids.length > 0) {
+                        processedData = processedData.sort((a: any, b: any) => {
+                            return ids.indexOf(a.id) - ids.indexOf(b.id)
                         })
                     }
 
@@ -92,7 +96,7 @@ export function useProducts(slugs?: string[]) {
         }
 
         fetchProducts()
-    }, [JSON.stringify(slugs)])
+    }, [JSON.stringify(ids)])
 
     return { products, loading }
 }

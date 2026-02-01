@@ -10,18 +10,13 @@ export default $config({
     };
   },
   async run() {
-    const stripeSecret = new sst.Secret("StripeSecretKey");
-    const stripeWebhookSecret = new sst.Secret("StripeWebhookSecret");
-    const supabaseServiceRoleKey = new sst.Secret("SupabaseServiceRoleKey");
+    const swatBlocSecret = new sst.Secret("SwatBlocSecret");
 
     const site = new sst.aws.Nextjs("MyWeb", {
-      link: [stripeSecret, stripeWebhookSecret, supabaseServiceRoleKey],
+      link: [swatBlocSecret],
       environment: {
-        NEXT_PUBLIC_SUPABASE_URL: "https://mwpautnftznfgzcxtpko.supabase.co",
-        NEXT_PUBLIC_SUPABASE_ANON_KEY: "sb_publishable_GREOi4yyH_HnwAcwHyBDwQ_mnfJTPot",
-        STRIPE_SECRET_KEY: stripeSecret.value,
-        STRIPE_WEBHOOK_SECRET: stripeWebhookSecret.value,
-        SUPABASE_SERVICE_ROLE_KEY: supabaseServiceRoleKey.value,
+        NEXT_PUBLIC_SWATBLOC_KEY: "pk_live_dnX7sfOjZoIhBrisMOQ5J9NFS6Ee1V2W",
+        NEXT_PRIVATE_SWATBLOC_KEY: swatBlocSecret.value,
       }
     });
   },

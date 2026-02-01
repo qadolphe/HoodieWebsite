@@ -250,3 +250,9 @@
         opacity: 1;
     }
 }
+
+.placeholderBackground {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+}

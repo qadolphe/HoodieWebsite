@@ -9,32 +9,49 @@ import styles from './CartDrawer.module.css'
 import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import AnimatedCounter from './AnimatedCounter'
+import { swat } from '@/lib/swatbloc'
 
 export default function CartDrawer() {
     const { isOpen, closeCart, items, removeItem, updateQuantity, totalPrice } = useCart()
     const [isLoading, setIsLoading] = useState(false)
+    const [mounted, setMounted] = useState(false)
     const pathname = usePathname()
+
+    useEffect(() => {
+        setMounted(true)
+    }, [])
 
     const handleCheckout = async () => {
         try {
             setIsLoading(true)
-            const response = await fetch('/api/checkout', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    items,
-                    returnUrl: pathname,
-                }),
+            closeCart() // Close the drawer immediately to prevent it from covering success page on specific return flows
+
+            // 1. Create cart via SDK with cart items
+            const cartItems = items.map(item => ({
+                productId: item.id,
+                quantity: item.quantity
+            }))
+            
+            const cart = await swat.cart.create(cartItems)
+
+            // 2. Create checkout session via SDK
+            // Construct the base URL carefully to handle Ngrok vs Localhost
+            let origin = process.env.NEXT_PUBLIC_URL || (typeof window !== 'undefined' ? window.location.origin : '')
+            origin = origin.replace(/\/$/, '') // Remove trailing slash
+
+            const successUrl = `${origin}/order/success?orderId=${cart.id}`
+            const cancelUrl = `${origin}${pathname || '/products'}`
+
+            const checkout = await swat.checkout.create(cart.id, {
+                successUrl,
+                cancelUrl
             })
 
-            const data = await response.json()
-
-            if (data.url) {
-                window.location.href = data.url
+            // 3. Redirect to Stripe checkout
+            if (checkout.url) {
+                window.location.href = checkout.url
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error checking out:', error)
         } finally {
             setIsLoading(false)
@@ -52,6 +69,8 @@ export default function CartDrawer() {
             document.body.style.overflow = 'unset'
         }
     }, [isOpen])
+
+    if (!mounted) return null;
 
     return (
         <AnimatePresence>
@@ -166,7 +185,7 @@ export default function CartDrawer() {
                                         <AnimatedCounter value={totalPrice()} isCurrency />
                                     </div>
                                 </div>
-                                <button 
+                                <button
                                     className={styles.checkoutBtn}
                                     onClick={handleCheckout}
                                     disabled={isLoading}

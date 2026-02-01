@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase'
+import { swat, mapSDKProduct } from '@/lib/swatbloc'
 import { Product } from '@/types'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -12,18 +12,14 @@ interface Props {
     params: Promise<{ slug: string }>
 }
 
-async function getProduct(slug: string) {
-    const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .eq('slug', slug)
-        .single()
-
-    if (error || !data) {
+async function getProduct(slug: string): Promise<Product | null> {
+    try {
+        const data: any = await swat.products.get(slug)
+        return mapSDKProduct(data) as Product
+    } catch (error) {
+        console.error('Error fetching product:', error)
         return null
     }
-
-    return data as Product
 }
 
 export default async function ProductDetailPage({ params }: Props) {
@@ -77,8 +73,8 @@ export default async function ProductDetailPage({ params }: Props) {
                     </div>
 
                     <div className={styles.actions}>
-                        <AddToCartButton 
-                            product={product} 
+                        <AddToCartButton
+                            product={product}
                             className={styles.addToCartButton}
                         />
                         <p className={styles.secureText}>
