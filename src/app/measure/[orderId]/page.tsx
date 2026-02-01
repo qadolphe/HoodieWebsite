@@ -168,6 +168,7 @@ export default function MeasurementPage({ params }: { params: Promise<{ orderId:
       <CanvasTool 
         imageUrl={image} 
         onComplete={handleComplete} 
+        onBack={() => setImage(null)}
       />
     );
   }
