@@ -35,9 +35,8 @@ export default function CartDrawer() {
             const cart = await swat.cart.create(cartItems)
 
             // 2. Create checkout session via SDK
-            // Construct the base URL carefully to handle Ngrok vs Localhost
-            let origin = process.env.NEXT_PUBLIC_URL || (typeof window !== 'undefined' ? window.location.origin : '')
-            origin = origin.replace(/\/$/, '') // Remove trailing slash
+            // Use current window location as origin for redirects
+            const origin = window.location.origin
 
             const successUrl = `${origin}/order/success?orderId=${cart.id}`
             const cancelUrl = `${origin}${pathname || '/products'}`
