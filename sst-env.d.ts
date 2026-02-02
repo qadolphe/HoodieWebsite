@@ -9,7 +9,11 @@ declare module "sst" {
       "type": "sst.aws.Nextjs"
       "url": string
     }
-    "SwatBlocSecret": {
+    "SwatBlocPublicKey": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
+    "SwatBlocSecretKey": {
       "type": "sst.sst.Secret"
       "value": string
     }

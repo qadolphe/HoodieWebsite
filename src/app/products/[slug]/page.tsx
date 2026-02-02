@@ -4,7 +4,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { notFound } from 'next/navigation'
 import styles from './page.module.css'
-import AddToCartButton from '@/components/AddToCartButton'
+import ProductForm from '@/components/ProductForm'
 
 export const revalidate = 60
 
@@ -73,12 +73,9 @@ export default async function ProductDetailPage({ params }: Props) {
                     </div>
 
                     <div className={styles.actions}>
-                        <AddToCartButton
-                            product={product}
-                            className={styles.addToCartButton}
-                        />
+                        <ProductForm product={product} />
                         <p className={styles.secureText}>
-                            Secure checkout powered by Stripe
+                            Secure checkout powered by SwatBloc
                         </p>
                     </div>
                 </div>

@@ -11,6 +11,8 @@ export interface CartItem {
   // For your specific app: is this a kit or a service?
   type: 'kit' | 'service' 
   slug: string
+  size?: string
+  variantId?: string
 }
 
 interface CartStore {
@@ -21,8 +23,8 @@ interface CartStore {
   openCart: () => void
   closeCart: () => void
   addItem: (item: CartItem) => void
-  removeItem: (id: string) => void
-  updateQuantity: (id: string, quantity: number) => void
+  removeItem: (id: string, size?: string, variantId?: string) => void
+  updateQuantity: (id: string, quantity: number, size?: string, variantId?: string) => void
   clearCart: () => void
   // Computed values
   totalPrice: () => number
@@ -41,36 +43,57 @@ export const useCart = create<CartStore>()(
       closeCart: () => set({ isOpen: false }),
       
       addItem: (newItem) => set((state) => {
-        const existingItem = state.items.find((i) => i.id === newItem.id)
+        // Uniqueness check: Match ID AND (VariantID OR Size)
+        // If variantId is present, match on that. If not, match on size.
+        const existingItem = state.items.find((i) => 
+          i.id === newItem.id && 
+          ((newItem.variantId && i.variantId === newItem.variantId) || 
+           (!newItem.variantId && i.size === newItem.size))
+        )
+
         if (existingItem) {
           // If item exists, just bump quantity
           return {
             items: state.items.map((i) =>
-              i.id === newItem.id ? { ...i, quantity: i.quantity + 1 } : i
+              i === existingItem ? { ...i, quantity: i.quantity + newItem.quantity } : i
             ),
-            isOpen: true // Open cart when adding item
+            isOpen: true
           }
         }
         return { 
-            items: [...state.items, { ...newItem, quantity: 1 }],
-            isOpen: true // Open cart when adding item
+            items: [...state.items, { ...newItem }],
+            isOpen: true
         }
       }),
 
-      removeItem: (id) => set((state) => ({
-        items: state.items.filter((i) => i.id !== id),
+      removeItem: (id, size, variantId) => set((state) => ({
+        items: state.items.filter((i) => {
+            if (i.id !== id) return true;
+            if (variantId && i.variantId === variantId) return false;
+            if (!variantId && size && i.size === size) return false;
+            return true;
+        }),
       })),
 
-      updateQuantity: (id, quantity) => set((state) => {
+      updateQuantity: (id, quantity, size, variantId) => set((state) => {
         if (quantity <= 0) {
             return {
-                items: state.items.filter((i) => i.id !== id)
+                items: state.items.filter((i) => {
+                    if (i.id !== id) return true;
+                    if (variantId && i.variantId === variantId) return false;
+                    if (!variantId && size && i.size === size) return false;
+                    return true;
+                })
             }
         }
         return {
-            items: state.items.map((i) =>
-                i.id === id ? { ...i, quantity } : i
-            ),
+            items: state.items.map((i) => {
+                const match = i.id === id && (
+                    (variantId && i.variantId === variantId) || 
+                    (!variantId && size && i.size === size)
+                );
+                return match ? { ...i, quantity } : i;
+            }),
         }
       }),
 

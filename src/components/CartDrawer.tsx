@@ -29,15 +29,15 @@ export default function CartDrawer() {
             // 1. Create cart via SDK with cart items
             const cartItems = items.map(item => ({
                 productId: item.id,
-                quantity: item.quantity
+                quantity: item.quantity,
+                variantId: item.variantId
             }))
             
             const cart = await swat.cart.create(cartItems)
 
             // 2. Create checkout session via SDK
-            // Construct the base URL carefully to handle Ngrok vs Localhost
-            let origin = process.env.NEXT_PUBLIC_URL || (typeof window !== 'undefined' ? window.location.origin : '')
-            origin = origin.replace(/\/$/, '') // Remove trailing slash
+            // Use current window location as origin for redirects
+            const origin = window.location.origin
 
             const successUrl = `${origin}/order/success?orderId=${cart.id}`
             const cancelUrl = `${origin}${pathname || '/products'}`
@@ -47,7 +47,7 @@ export default function CartDrawer() {
                 cancelUrl
             })
 
-            // 3. Redirect to Stripe checkout
+            // 3. Redirect to checkout
             if (checkout.url) {
                 window.location.href = checkout.url
             }
@@ -110,7 +110,7 @@ export default function CartDrawer() {
                                 <AnimatePresence initial={false} mode="popLayout">
                                     {items.map((item) => (
                                         <motion.div
-                                            key={item.id}
+                                            key={`${item.id}-${item.variantId || item.size || 'default'}`}
                                             layout
                                             initial={{ opacity: 0, scale: 0.9 }}
                                             animate={{ opacity: 1, scale: 1 }}
@@ -140,6 +140,9 @@ export default function CartDrawer() {
                                                     >
                                                         {item.name}
                                                     </Link>
+                                                    {item.size && (
+                                                        <p className="text-sm text-zinc-500 mt-0.5">Size: {item.size}</p>
+                                                    )}
                                                     <p className={styles.itemPrice}>
                                                         ${(item.price / 100).toFixed(2)}
                                                     </p>
@@ -147,7 +150,7 @@ export default function CartDrawer() {
                                                 <div className={styles.itemMeta}>
                                                     <div className={styles.quantityControls}>
                                                         <button
-                                                            onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                                                            onClick={() => updateQuantity(item.id, item.quantity - 1, item.size, item.variantId)}
                                                             className={styles.qtyBtn}
                                                         >
                                                             <Minus size={14} />
@@ -156,14 +159,14 @@ export default function CartDrawer() {
                                                             {item.quantity}
                                                         </span>
                                                         <button
-                                                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                                                            onClick={() => updateQuantity(item.id, item.quantity + 1, item.size, item.variantId)}
                                                             className={styles.qtyBtn}
                                                         >
                                                             <Plus size={14} />
                                                         </button>
                                                     </div>
                                                     <button
-                                                        onClick={() => removeItem(item.id)}
+                                                        onClick={() => removeItem(item.id, item.size, item.variantId)}
                                                         className={styles.removeBtn}
                                                     >
                                                         Remove
