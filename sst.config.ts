@@ -10,20 +10,14 @@ export default $config({
     };
   },
   async run() {
-    const swatBlocSecret = new sst.Secret("SwatBlocSecret");
-
-    const isProduction = $app.stage === "production";
-    
-    // Config values
-    const PUBLIC_KEY_LIVE = "pk_live_Fu3btBtlMidrBfC2N2IAZnbm06OlOeOY";
-    const PUBLIC_KEY_TEST = "pk_test_e4BOuC9vLrnsCiLsHCFWx0Z09udR384Q";
-    const PRIVATE_KEY_TEST = "sk_test_hJU7ggUMWhTi3QWJPT20cgpt8n5mWCV4";
+    const swatBlocPublicKey = new sst.Secret("SwatBlocPublicKey");
+    const swatBlocSecretKey = new sst.Secret("SwatBlocSecretKey");
 
     const site = new sst.aws.Nextjs("MyWeb", {
-      link: isProduction ? [swatBlocSecret] : [],
+      link: [swatBlocPublicKey, swatBlocSecretKey],
       environment: {
-        NEXT_PUBLIC_SWATBLOC_KEY: isProduction ? PUBLIC_KEY_LIVE : PUBLIC_KEY_TEST,
-        NEXT_PRIVATE_SWATBLOC_KEY: isProduction ? swatBlocSecret.value : PRIVATE_KEY_TEST,
+        NEXT_PUBLIC_SWATBLOC_KEY: swatBlocPublicKey.value,
+        NEXT_PRIVATE_SWATBLOC_KEY: swatBlocSecretKey.value,
       }
     });
   },
