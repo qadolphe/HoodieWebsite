@@ -109,7 +109,7 @@ export default function CartDrawer() {
                                 <AnimatePresence initial={false} mode="popLayout">
                                     {items.map((item) => (
                                         <motion.div
-                                            key={item.id}
+                                            key={`${item.id}-${item.size || 'default'}`}
                                             layout
                                             initial={{ opacity: 0, scale: 0.9 }}
                                             animate={{ opacity: 1, scale: 1 }}
@@ -139,6 +139,9 @@ export default function CartDrawer() {
                                                     >
                                                         {item.name}
                                                     </Link>
+                                                    {item.size && (
+                                                        <p className="text-sm text-zinc-500 mt-0.5">Size: {item.size}</p>
+                                                    )}
                                                     <p className={styles.itemPrice}>
                                                         ${(item.price / 100).toFixed(2)}
                                                     </p>
@@ -146,7 +149,7 @@ export default function CartDrawer() {
                                                 <div className={styles.itemMeta}>
                                                     <div className={styles.quantityControls}>
                                                         <button
-                                                            onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                                                            onClick={() => updateQuantity(item.id, item.quantity - 1, item.size)}
                                                             className={styles.qtyBtn}
                                                         >
                                                             <Minus size={14} />
@@ -155,14 +158,14 @@ export default function CartDrawer() {
                                                             {item.quantity}
                                                         </span>
                                                         <button
-                                                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                                                            onClick={() => updateQuantity(item.id, item.quantity + 1, item.size)}
                                                             className={styles.qtyBtn}
                                                         >
                                                             <Plus size={14} />
                                                         </button>
                                                     </div>
                                                     <button
-                                                        onClick={() => removeItem(item.id)}
+                                                        onClick={() => removeItem(item.id, item.size)}
                                                         className={styles.removeBtn}
                                                     >
                                                         Remove

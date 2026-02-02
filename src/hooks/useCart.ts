@@ -11,6 +11,7 @@ export interface CartItem {
   // For your specific app: is this a kit or a service?
   type: 'kit' | 'service' 
   slug: string
+  size?: string
 }
 
 interface CartStore {
@@ -21,8 +22,8 @@ interface CartStore {
   openCart: () => void
   closeCart: () => void
   addItem: (item: CartItem) => void
-  removeItem: (id: string) => void
-  updateQuantity: (id: string, quantity: number) => void
+  removeItem: (id: string, size?: string) => void
+  updateQuantity: (id: string, quantity: number, size?: string) => void
   clearCart: () => void
   // Computed values
   totalPrice: () => number
@@ -41,35 +42,35 @@ export const useCart = create<CartStore>()(
       closeCart: () => set({ isOpen: false }),
       
       addItem: (newItem) => set((state) => {
-        const existingItem = state.items.find((i) => i.id === newItem.id)
+        const existingItem = state.items.find((i) => i.id === newItem.id && i.size === newItem.size)
         if (existingItem) {
           // If item exists, just bump quantity
           return {
             items: state.items.map((i) =>
-              i.id === newItem.id ? { ...i, quantity: i.quantity + 1 } : i
+              i.id === newItem.id && i.size === newItem.size ? { ...i, quantity: i.quantity + newItem.quantity } : i
             ),
             isOpen: true // Open cart when adding item
           }
         }
         return { 
-            items: [...state.items, { ...newItem, quantity: 1 }],
+            items: [...state.items, { ...newItem }],
             isOpen: true // Open cart when adding item
         }
       }),
 
-      removeItem: (id) => set((state) => ({
-        items: state.items.filter((i) => i.id !== id),
+      removeItem: (id, size) => set((state) => ({
+        items: state.items.filter((i) => !(i.id === id && i.size === size)),
       })),
 
-      updateQuantity: (id, quantity) => set((state) => {
+      updateQuantity: (id, quantity, size) => set((state) => {
         if (quantity <= 0) {
             return {
-                items: state.items.filter((i) => i.id !== id)
+                items: state.items.filter((i) => !(i.id === id && i.size === size))
             }
         }
         return {
             items: state.items.map((i) =>
-                i.id === id ? { ...i, quantity } : i
+                i.id === id && i.size === size ? { ...i, quantity } : i
             ),
         }
       }),

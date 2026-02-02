@@ -78,63 +78,37 @@ function SuccessContent() {
     const orderIdToDisplay = resolvedOrderId || urlOrderId || '';
 
     return (
-        <div className="min-h-screen flex flex-col items-center justify-center px-6 py-24">
+        <div className="min-h-screen bg-black flex flex-col items-center justify-center px-6 py-24">
             <div className="w-full max-w-lg mx-auto text-center">
                 {/* Success Icon */}
-                <div className="flex justify-center mb-8">
-                    <div className="w-20 h-20 rounded-full bg-green-500/10 border border-green-500/20 flex items-center justify-center">
-                        <Check className="w-10 h-10 text-green-500" strokeWidth={3} />
+                <div className="flex justify-center mb-10">
+                    <div className="w-24 h-24 rounded-[2rem] bg-green-500/10 border border-green-500/20 flex items-center justify-center">
+                        <Check className="w-12 h-12 text-green-500" strokeWidth={3} />
                     </div>
                 </div>
                 
                 {/* Heading */}
-                <h1 className="text-4xl md:text-5xl font-bold mb-4 text-white">
+                <h1 className="text-5xl md:text-6xl font-bold mb-6 text-white tracking-tight">
                     Order Confirmed
                 </h1>
                 
                 {/* Subtext */}
-                <p className="text-zinc-400 text-lg mb-2">
+                <p className="text-zinc-400 text-xl font-medium mb-2">
                     Payment successful. We've sent a confirmation email.
                 </p>
                 {orderIdToDisplay && (
-                    <p className="text-zinc-500 font-mono text-sm mb-12">
+                    <p className="text-zinc-600 font-mono text-sm mb-16">
                         Order #{orderIdToDisplay}
                     </p>
                 )}
 
-                {/* Next Step Card */}
-                {hasKit && orderIdToDisplay ? (
-                    <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 md:p-8">
-                        <div className="flex justify-center mb-4">
-                            <div className="w-14 h-14 bg-blue-500/10 border border-blue-500/20 rounded-xl flex items-center justify-center">
-                                <Ruler className="w-7 h-7 text-blue-400" />
-                            </div>
-                        </div>
-                        
-                        <h2 className="text-xl font-bold text-white mb-2">
-                            Complete Your Measurements
-                        </h2>
-                        <p className="text-zinc-400 text-sm mb-6">
-                            Your kit includes custom sizing. Take 2 minutes to finalize your fit.
-                        </p>
-                        
-                        <button 
-                            onClick={() => router.push(`/measure/${orderIdToDisplay}`)}
-                            className="inline-flex items-center gap-2 bg-white text-black font-semibold px-6 py-3 rounded-xl hover:bg-zinc-200 transition-colors"
-                        >
-                            Start Measurement
-                            <ArrowRight className="w-4 h-4" />
-                        </button>
-                    </div>
-                ) : (
-                    <Link 
-                        href="/products" 
-                        className="inline-flex items-center gap-2 bg-white text-black font-semibold px-8 py-4 rounded-xl hover:bg-zinc-200 transition-colors"
-                    >
-                        Continue Shopping
-                        <ArrowRight className="w-4 h-4" />
-                    </Link>
-                )}
+                <Link 
+                    href="/products" 
+                    className="inline-flex items-center gap-3 bg-white text-black font-bold px-12 py-5 rounded-2xl hover:bg-zinc-200 transition-all hover:scale-[1.02] active:scale-[0.98] shadow-2xl"
+                >
+                    Continue Shopping
+                    <ArrowRight className="w-5 h-5" />
+                </Link>
             </div>
         </div>
     )
