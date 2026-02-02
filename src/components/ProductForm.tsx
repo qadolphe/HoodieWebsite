@@ -1,21 +1,59 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useCart } from '@/hooks/useCart'
 import { Product } from '@/types'
 import { Ruler, Check, ShieldCheck } from 'lucide-react'
+import { swat } from '@/lib/swatbloc'
 
 // Simple sizes for hoodies - we can make this dynamic later if needed
 const SIZES = ['S', 'M', 'L', 'XL', '2XL']
 
 export default function ProductForm({ product }: { product: Product }) {
     const [selectedSize, setSelectedSize] = useState<string>('')
+    const [selectedVariantId, setSelectedVariantId] = useState<string | undefined>()
+    const [variants, setVariants] = useState<any[]>([])
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const [isLoadingVariants, setIsLoadingVariants] = useState(false)
+
     const [showSizeGuide, setShowSizeGuide] = useState(false)
     const [isAdded, setIsAdded] = useState(false)
     const addItem = useCart((state) => state.addItem)
 
+    useEffect(() => {
+        let mounted = true;
+        const fetchVariants = async () => {
+             setIsLoadingVariants(true);
+             try {
+                 const data = await swat.variants.list(product.id);
+                 if (mounted && data && data.length > 0) {
+                     setVariants(data.sort((a, b) => {
+                         // Sort S, M, L... if we can. (Crude sort)
+                         const order = { S:1, M:2, L:3, XL:4, '2XL':5 };
+                         const sA = a.options?.Size || '';
+                         const sB = b.options?.Size || '';
+                         return (order[sA as keyof typeof order] || 99) - (order[sB as keyof typeof order] || 99);
+                     }));
+                 }
+             } catch (e) {
+                 console.error("Failed to load variants", e);
+             } finally {
+                 if (mounted) setIsLoadingVariants(false);
+             }
+        };
+        fetchVariants();
+        return () => { mounted = false; };
+    }, [product.id]);
+
     const handleAddToCart = () => {
         if (!selectedSize) return
+
+        // Find variant if we are using them
+        let variantId = selectedVariantId;
+        if (!variantId && variants.length > 0) {
+            const v = variants.find(v => v.options?.Size === selectedSize);
+            if (v) variantId = v.id;
+        }
 
         addItem({
             id: product.id,
@@ -25,12 +63,17 @@ export default function ProductForm({ product }: { product: Product }) {
             image: product.image_url || undefined,
             type: product.type,
             slug: product.slug,
-            size: selectedSize
+            size: selectedSize,
+            variantId: variantId
         })
 
         setIsAdded(true)
         setTimeout(() => setIsAdded(false), 2000)
     }
+
+    const availableSizes = variants.length > 0 
+        ? variants.map(v => v.options?.Size || v.title).filter(Boolean) 
+        : SIZES;
 
     return (
         <div className="flex flex-col gap-6 mt-8">
@@ -73,13 +116,19 @@ export default function ProductForm({ product }: { product: Product }) {
 
                 {/* Size Buttons */}
                 <div className="p-4">
-                    <div className="flex gap-2">
-                        {SIZES.map((size) => (
+                    <div className="flex gap-2 flex-wrap">
+                        {availableSizes.map((size) => (
                             <button
                                 key={size}
-                                onClick={() => setSelectedSize(size)}
+                                onClick={() => {
+                                    setSelectedSize(size);
+                                    if (variants.length > 0) {
+                                        const v = variants.find(v => (v.options?.Size === size || v.title === size));
+                                        if (v) setSelectedVariantId(v.id);
+                                    }
+                                }}
                                 className={`
-                                    flex-1 py-3 text-sm font-semibold rounded-xl border-2
+                                    flex-1 min-w-[60px] py-3 text-sm font-semibold rounded-xl border-2
                                     transition-all duration-200 ease-out
                                     ${selectedSize === size
                                         ? 'border-white bg-white text-black scale-[1.02] shadow-lg shadow-white/10'

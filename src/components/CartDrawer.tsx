@@ -29,7 +29,8 @@ export default function CartDrawer() {
             // 1. Create cart via SDK with cart items
             const cartItems = items.map(item => ({
                 productId: item.id,
-                quantity: item.quantity
+                quantity: item.quantity,
+                variantId: item.variantId
             }))
             
             const cart = await swat.cart.create(cartItems)
@@ -109,7 +110,7 @@ export default function CartDrawer() {
                                 <AnimatePresence initial={false} mode="popLayout">
                                     {items.map((item) => (
                                         <motion.div
-                                            key={`${item.id}-${item.size || 'default'}`}
+                                            key={`${item.id}-${item.variantId || item.size || 'default'}`}
                                             layout
                                             initial={{ opacity: 0, scale: 0.9 }}
                                             animate={{ opacity: 1, scale: 1 }}
@@ -149,7 +150,7 @@ export default function CartDrawer() {
                                                 <div className={styles.itemMeta}>
                                                     <div className={styles.quantityControls}>
                                                         <button
-                                                            onClick={() => updateQuantity(item.id, item.quantity - 1, item.size)}
+                                                            onClick={() => updateQuantity(item.id, item.quantity - 1, item.size, item.variantId)}
                                                             className={styles.qtyBtn}
                                                         >
                                                             <Minus size={14} />
@@ -158,14 +159,14 @@ export default function CartDrawer() {
                                                             {item.quantity}
                                                         </span>
                                                         <button
-                                                            onClick={() => updateQuantity(item.id, item.quantity + 1, item.size)}
+                                                            onClick={() => updateQuantity(item.id, item.quantity + 1, item.size, item.variantId)}
                                                             className={styles.qtyBtn}
                                                         >
                                                             <Plus size={14} />
                                                         </button>
                                                     </div>
                                                     <button
-                                                        onClick={() => removeItem(item.id, item.size)}
+                                                        onClick={() => removeItem(item.id, item.size, item.variantId)}
                                                         className={styles.removeBtn}
                                                     >
                                                         Remove
