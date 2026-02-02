@@ -20,80 +20,80 @@ async function run() {
     const swat = new SwatBloc(liveKey);
 
     try {
-        // 1. Find the product first
+        // 1. Find the kits first
         console.log("Fetching products from environment...");
         const products = await swat.products.list();
         
-        console.log(`Found ${products.length} products.`);
-        console.log(products); // Log full objects to inspect structure
+        console.log(`Found ${products.length} products total.`);
 
-        const refillKit = products.find((p: any) => 
-            (p.title && p.title.includes("Refill")) || (p.slug && p.slug.includes("refill"))
+        const kits = products.filter((p: any) => 
+            p.id === '9b17e3aa-0d23-44da-a317-a33540d142fe' || // Refill
+            p.id === 'e6d01c1b-6923-4f2c-9454-3ccd3ab726ca' || // Essentials
+            p.id === 'c4f4d01d-eb12-47ae-9234-9e066c70e279'    // All-in-one
         );
 
-        if (!refillKit) {
-            console.error("Could not find 'Refill Kit'.");
-            return;
-        }
+        console.log(`Targeting ${kits.length} kits.`);
 
-        console.log(`Targeting Product: ${refillKit.title} (${refillKit.id})`);
+        for (const kit of kits) {
+            console.log(`\n--- Processing Kit: ${kit.title} (${kit.id}) ---`);
 
-        // Update Product Level Options first
-        console.log("Updating Product Options definition...");
-        try {
-            await swat.products.update(refillKit.id, {
-                options: [
-                    {
-                        name: "Size",
-                        values: SIZES
+            // Update Product Level Options first
+            console.log("Updating Product Options definition...");
+            try {
+                await swat.products.update(kit.id, {
+                    options: [
+                        {
+                            name: "Size",
+                            values: SIZES
+                        }
+                    ]
+                });
+                console.log("✅ Product options definition updated.");
+            } catch (e: any) {
+                console.error("❌ Failed to update product options:", e.message);
+            }
+
+            // Check if variants already exist
+            console.log("Checking existing variants...");
+            const existingVariants = await swat.variants.list(kit.id).catch(() => []);
+            console.log(`Found ${existingVariants.length} existing variants.`);
+
+            // DELETE existing variants for this kit to ensure fresh creation with correct options
+            if (existingVariants.length > 0) {
+                console.log("Deleting existing variants to key correct options mapping...");
+                for (const v of existingVariants) {
+                    try {
+                        console.log(`Deleting ${v.title}...`);
+                        await swat.variants.delete(kit.id, v.id); 
+                        console.log("✅ Deleted.");
+                    } catch (e: any) {
+                        console.error(`❌ Failed to delete ${v.id}:`, e.message);
                     }
-                ]
-            });
-            console.log("✅ Product options definition updated.");
-        } catch (e: any) {
-            console.error("❌ Failed to update product options:", e.message);
-        }
-
-        // Check if variants already exist to avoid duplicates (optional, but good practice)
-        console.log("Checking existing variants...");
-        const existingVariants = await swat.variants.list(refillKit.id).catch(() => []);
-        console.log(`Found ${existingVariants.length} existing variants.`);
-
-        // DELETE existing variants to ensure fresh creation with correct options
-        if (existingVariants.length > 0) {
-            console.log("Deleting existing variants to key correct options mapping...");
-            for (const v of existingVariants) {
-                try {
-                    console.log(`Deleting ${v.title}...`);
-                    // Correct signature: swat.variants.delete(productId, variantId)
-                    await swat.variants.delete(refillKit.id, v.id); 
-                    console.log("✅ Deleted.");
-                } catch (e: any) {
-                    console.error(`❌ Failed to delete ${v.id}:`, e.message);
                 }
             }
-        }
 
-        // 2. Create Variants
-        for (const size of SIZES) {
-             console.log(`Creating variant: ${size}...`);
-             // Use price directly (it's already 2499 cents)
-             const price = refillKit.price; 
-             
-             try {
-                const variant = await swat.variants.create(refillKit.id, {
-                    title: `${refillKit.title} - ${size}`,
-                    price: price, 
-                    inventory_quantity: 100,
-                    options: {
-                        "Size": size
-                    },
-                    sku: `REFILL-${size}`,
-                });
-                console.log(`✅ Created ${variant.title} (${variant.id})`);
-             } catch (err: any) {
-                 console.error(`❌ Failed to create ${size}:`, err.message || err);
-             }
+            // 2. Create Variants
+            const skuBase = kit.slug.replace(/-kit.*$/, '').toUpperCase();
+
+            for (const size of SIZES) {
+                 console.log(`Creating variant: ${size}...`);
+                 const price = kit.price; 
+                 
+                 try {
+                    const variant = await swat.variants.create(kit.id, {
+                        title: `${kit.title} - ${size}`,
+                        price: price, 
+                        inventory_quantity: 100,
+                        options: {
+                            "Size": size
+                        },
+                        sku: `${skuBase}-${size}`,
+                    });
+                    console.log(`✅ Created ${variant.title} (${variant.id})`);
+                 } catch (err: any) {
+                     console.error(`❌ Failed to create ${size}:`, err.message || err);
+                 }
+            }
         }
 
     } catch (error) {
