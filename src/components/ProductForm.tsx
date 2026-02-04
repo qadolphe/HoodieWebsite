@@ -23,23 +23,23 @@ export default function ProductForm({ product }: { product: Product }) {
     useEffect(() => {
         let mounted = true;
         const fetchVariants = async () => {
-             setIsLoadingVariants(true);
-             try {
-                 const data = await swat.variants.list(product.id);
-                 if (mounted && data && data.length > 0) {
-                     setVariants(data.sort((a, b) => {
-                         // Sort S, M, L... if we can. (Crude sort)
-                         const order = { S:1, M:2, L:3, XL:4, '2XL':5 };
-                         const sA = a.options?.Size || '';
-                         const sB = b.options?.Size || '';
-                         return (order[sA as keyof typeof order] || 99) - (order[sB as keyof typeof order] || 99);
-                     }));
-                 }
-             } catch (e) {
-                 console.error("Failed to load variants", e);
-             } finally {
-                 if (mounted) setIsLoadingVariants(false);
-             }
+            setIsLoadingVariants(true);
+            try {
+                const data = await swat.variants.list(product.id);
+                if (mounted && data && data.length > 0) {
+                    setVariants(data.sort((a, b) => {
+                        // Sort S, M, L... if we can. (Crude sort)
+                        const order = { S: 1, M: 2, L: 3, XL: 4, '2XL': 5 };
+                        const sA = a.options?.Size || '';
+                        const sB = b.options?.Size || '';
+                        return (order[sA as keyof typeof order] || 99) - (order[sB as keyof typeof order] || 99);
+                    }));
+                }
+            } catch (e) {
+                console.error("Failed to load variants", e);
+            } finally {
+                if (mounted) setIsLoadingVariants(false);
+            }
         };
         fetchVariants();
         return () => { mounted = false; };
@@ -71,33 +71,30 @@ export default function ProductForm({ product }: { product: Product }) {
         setTimeout(() => setIsAdded(false), 2000)
     }
 
-    const availableSizes = variants.length > 0 
-        ? variants.map(v => v.options?.Size || v.title).filter(Boolean) 
+    const availableSizes = variants.length > 0
+        ? variants.map(v => v.options?.Size || v.title).filter(Boolean)
         : SIZES;
 
     return (
-        <div className="flex flex-col gap-6 mt-8">
-            {/* Size Selector Card */}
-            <div className="bg-gradient-to-b from-zinc-900/60 to-zinc-900/30 backdrop-blur-sm border border-zinc-800/60 rounded-2xl overflow-hidden">
-                {/* Header */}
-                <div className="flex justify-between items-center px-5 py-4 border-b border-zinc-800/50">
-                    <div>
-                        <span className="text-[10px] uppercase tracking-[0.15em] text-zinc-500 font-medium">Select Size</span>
-                        <h3 className="text-base font-semibold text-white mt-0.5">Choose Your Fit</h3>
-                    </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '2rem' }}>
+            {/* Size Selection */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                {/* Header Row */}
+                <div className="flex justify-between items-center">
+                    <h3 className="text-xl font-semibold text-white">Select Size</h3>
                     <button
                         onClick={() => setShowSizeGuide(!showSizeGuide)}
-                        className="text-xs text-zinc-400 flex items-center gap-1.5 hover:text-white transition-colors px-3 py-1.5 rounded-full bg-zinc-800/50 hover:bg-zinc-800"
+                        className="text-sm text-zinc-400 flex items-center gap-2 hover:text-white transition-colors"
                     >
-                        <Ruler className="w-3.5 h-3.5" />
-                        {showSizeGuide ? 'Hide' : 'Size Guide'}
+                        <Ruler className="w-4 h-4" />
+                        {showSizeGuide ? 'Hide Guide' : 'Size Guide'}
                     </button>
                 </div>
 
-                {/* Size Guide Dropdown */}
+                {/* Size Guide (collapsible) */}
                 {showSizeGuide && (
-                    <div className="px-5 py-4 bg-zinc-800/20 border-b border-zinc-800/50">
-                        <div className="grid grid-cols-5 gap-2 text-center text-xs">
+                    <div className="bg-zinc-800/40 rounded-xl p-5">
+                        <div className="grid grid-cols-5 gap-4 text-center">
                             {[
                                 { size: 'S', chest: '34-36"' },
                                 { size: 'M', chest: '38-40"' },
@@ -105,9 +102,9 @@ export default function ProductForm({ product }: { product: Product }) {
                                 { size: 'XL', chest: '46-48"' },
                                 { size: '2XL', chest: '50-52"' }
                             ].map((item) => (
-                                <div key={item.size} className="flex flex-col gap-0.5">
-                                    <span className="font-semibold text-white">{item.size}</span>
-                                    <span className="text-zinc-500 text-[10px]">{item.chest}</span>
+                                <div key={item.size} className="space-y-1">
+                                    <div className="text-sm font-semibold text-white">{item.size}</div>
+                                    <div className="text-xs text-zinc-500">{item.chest}</div>
                                 </div>
                             ))}
                         </div>
@@ -115,62 +112,63 @@ export default function ProductForm({ product }: { product: Product }) {
                 )}
 
                 {/* Size Buttons */}
-                <div className="p-4">
-                    <div className="flex gap-2 flex-wrap">
-                        {availableSizes.map((size) => (
-                            <button
-                                key={size}
-                                onClick={() => {
-                                    setSelectedSize(size);
-                                    if (variants.length > 0) {
-                                        const v = variants.find(v => (v.options?.Size === size || v.title === size));
-                                        if (v) setSelectedVariantId(v.id);
-                                    }
-                                }}
-                                className={`
-                                    flex-1 min-w-[60px] py-3 text-sm font-semibold rounded-xl border-2
-                                    transition-all duration-200 ease-out
-                                    ${selectedSize === size
-                                        ? 'border-white bg-white text-black scale-[1.02] shadow-lg shadow-white/10'
-                                        : 'border-zinc-700/50 bg-zinc-800/30 text-zinc-400 hover:border-zinc-600 hover:text-zinc-200 hover:bg-zinc-800/50'
-                                    }
-                                `}
-                            >
-                                {size}
-                            </button>
-                        ))}
-                    </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '0.75rem' }}>
+                    {availableSizes.map((size) => (
+                        <button
+                            key={size}
+                            onClick={() => {
+                                setSelectedSize(size);
+                                if (variants.length > 0) {
+                                    const v = variants.find(v => (v.options?.Size === size || v.title === size));
+                                    if (v) setSelectedVariantId(v.id);
+                                }
+                            }}
+                            className={`
+                                py-10 text-xl font-bold rounded-2xl
+                                transition-all duration-300 ease-out relative overflow-hidden group
+                                flex items-center justify-center
+                                border
+                                ${selectedSize === size
+                                    ? 'bg-white text-black border-white shadow-[0_0_20px_rgba(255,255,255,0.3)]'
+                                    : 'bg-zinc-900/50 text-zinc-400 border-zinc-800 hover:border-zinc-500 hover:text-white hover:bg-zinc-800 hover:shadow-[0_0_15px_rgba(255,255,255,0.1)]'
+                                }
+                            `}
+                        >
+                            <span className="relative z-10">{size}</span>
+                        </button>
+                    ))}
                 </div>
             </div>
 
-            {/* Add to Cart Section */}
-            <div className="flex flex-col gap-3">
+            {/* Add to Cart */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 <button
                     onClick={handleAddToCart}
                     disabled={!selectedSize || isAdded}
                     className={`
-                        w-full py-4 px-6 rounded-xl font-bold text-lg 
-                        transition-all duration-200 ease-out
+                        w-full py-10 rounded-2xl font-bold text-xl uppercase tracking-wide
+                        transition-all duration-300 ease-out relative overflow-hidden
+                        border
                         ${isAdded
-                            ? 'bg-emerald-500 text-white cursor-default'
+                            ? 'bg-emerald-500 text-white border-emerald-400 cursor-default'
                             : !selectedSize
-                                ? 'bg-zinc-800/60 text-zinc-500 cursor-not-allowed border border-zinc-700/50'
-                                : 'bg-white text-black hover:bg-zinc-100 hover:shadow-xl hover:shadow-white/10 active:scale-[0.98]'
+                                ? 'bg-zinc-900/30 text-zinc-600 border-zinc-800/50 cursor-not-allowed'
+                                : 'bg-white text-black border-white hover:shadow-[0_0_30px_rgba(255,255,255,0.2)] hover:scale-[1.01]'
                         }
                     `}
                 >
                     {isAdded ? (
-                        <span className="flex items-center justify-center gap-2">
-                            <Check className="w-5 h-5" strokeWidth={2.5} /> Added to Cart
+                        <span className="flex items-center justify-center gap-3">
+                            <Check className="w-6 h-6" strokeWidth={3} /> Added to Cart
                         </span>
                     ) : (
                         selectedSize ? 'Add to Cart' : 'Select a Size'
                     )}
                 </button>
 
-                {/* Security Badge */}
-                <div className="flex items-center justify-center gap-2 text-zinc-500 text-[11px] uppercase tracking-wider">
-                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+                {/* Secure Checkout Badge */}
+                <div className="flex items-center justify-center gap-2 text-zinc-500 text-xs uppercase tracking-wider">
+                    <ShieldCheck className="w-4 h-4 text-emerald-500" />
                     <span>Secure checkout powered by SwatBloc</span>
                 </div>
             </div>

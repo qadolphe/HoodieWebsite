@@ -74,9 +74,6 @@ export default async function ProductDetailPage({ params }: Props) {
 
                     <div className={styles.actions}>
                         <ProductForm product={product} />
-                        <p className={styles.secureText}>
-                            Secure checkout powered by SwatBloc
-                        </p>
                     </div>
                 </div>
             </div>
