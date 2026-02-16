@@ -2,7 +2,7 @@
 
 import { useCart } from '@/hooks/useCart'
 import { AnimatePresence, motion } from 'framer-motion'
-import { X, ShoppingBag, Minus, Plus } from 'lucide-react'
+import { X, ShoppingBag, Minus, Plus, ShieldCheck } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import styles from './CartDrawer.module.css'
@@ -10,9 +10,10 @@ import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import AnimatedCounter from './AnimatedCounter'
 import { swat } from '@/lib/swatbloc'
+import { INSURANCE_VARIANT_IDS, PRODUCT_IDS } from '@/lib/constants'
 
 export default function CartDrawer() {
-    const { isOpen, closeCart, items, removeItem, updateQuantity, totalPrice } = useCart()
+    const { isOpen, closeCart, items, removeItem, updateQuantity, totalPrice, addItem } = useCart()
     const [isLoading, setIsLoading] = useState(false)
     const [mounted, setMounted] = useState(false)
     const pathname = usePathname()
@@ -30,7 +31,8 @@ export default function CartDrawer() {
             const cartItems = items.map(item => ({
                 productId: item.id,
                 quantity: item.quantity,
-                variantId: item.variantId
+                variantId: item.variantId,
+                metadata: item.metadata
             }))
             
             const cart = await swat.cart.create(cartItems)
@@ -56,6 +58,42 @@ export default function CartDrawer() {
         } finally {
             setIsLoading(false)
         }
+    }
+
+    const mailInServiceItem = items.find((item) => item.id === PRODUCT_IDS.MAIL_IN_SERVICE)
+    const hasInsurance = items.some((item) => item.id === PRODUCT_IDS.MAIL_IN_INSURANCE)
+
+    // Phase 3 requirement: tiering is based on physical cart value
+    const physicalCartValueCents = items.reduce((sum, item) => {
+        if (item.type !== 'kit') return sum
+        return sum + item.price * item.quantity
+    }, 0)
+
+    const suggestedInsuranceVariantId = physicalCartValueCents > 5000
+        ? INSURANCE_VARIANT_IDS.STANDARD
+        : INSURANCE_VARIANT_IDS.BASIC
+
+    const suggestedInsurancePriceCents = suggestedInsuranceVariantId === INSURANCE_VARIANT_IDS.STANDARD ? 800 : 400
+    const suggestedInsuranceName = suggestedInsuranceVariantId === INSURANCE_VARIANT_IDS.STANDARD
+        ? 'Mail-In Protection (Standard • Up to $100)'
+        : 'Mail-In Protection (Basic • Up to $50)'
+
+    const handleAddInsurance = async () => {
+        if (!mailInServiceItem) return
+
+        addItem({
+            id: PRODUCT_IDS.MAIL_IN_INSURANCE,
+            name: suggestedInsuranceName,
+            price: suggestedInsurancePriceCents,
+            quantity: 1,
+            type: 'service',
+            slug: 'mail-in-service-protection-plan',
+            variantId: suggestedInsuranceVariantId,
+            metadata: {
+                covers_item_ref: mailInServiceItem.id,
+                coverage_type: 'loss_and_damage'
+            }
+        })
     }
 
     // Prevent body scroll when cart is open
@@ -181,6 +219,26 @@ export default function CartDrawer() {
 
                         {items.length > 0 && (
                             <div className={styles.footer}>
+                                {mailInServiceItem && !hasInsurance && (
+                                    <div className={styles.upsellCard}>
+                                        <div className={styles.upsellHeader}>
+                                            <ShieldCheck size={16} />
+                                            <span>Protect your mail-in order</span>
+                                        </div>
+                                        <p className={styles.upsellDescription}>
+                                            {suggestedInsuranceVariantId === INSURANCE_VARIANT_IDS.STANDARD
+                                                ? 'Standard Tier: Up to $100 coverage for hoodie loss/damage.'
+                                                : 'Basic Tier: Up to $50 coverage or service-fee refund.'}
+                                        </p>
+                                        <button
+                                            className={styles.upsellButton}
+                                            onClick={handleAddInsurance}
+                                        >
+                                            Add Protection • ${(suggestedInsurancePriceCents / 100).toFixed(2)}
+                                        </button>
+                                    </div>
+                                )}
+
                                 <div className={styles.totalRow}>
                                     <span>Total</span>
                                     <div style={{ display: 'flex', alignItems: 'center' }}>

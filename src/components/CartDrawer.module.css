@@ -164,6 +164,51 @@
     background: #0a0a0a;
 }
 
+.upsellCard {
+    margin-bottom: 1rem;
+    padding: 0.875rem;
+    border: 1px solid rgba(212, 133, 255, 0.45);
+    background: rgba(212, 133, 255, 0.08);
+    border-radius: 0.75rem;
+}
+
+.upsellHeader {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #f5e8ff;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.upsellDescription {
+    margin-top: 0.5rem;
+    margin-bottom: 0.75rem;
+    color: #e4d4f5;
+    font-size: 0.8rem;
+    line-height: 1.35;
+}
+
+.upsellButton {
+    width: 100%;
+    border: 1px solid rgba(212, 133, 255, 0.6);
+    background: transparent;
+    color: #fff;
+    padding: 0.625rem 0.75rem;
+    border-radius: 9999px;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    transition: all 0.2s;
+}
+
+.upsellButton:hover {
+    background: #c084fc;
+    border-color: #c084fc;
+    color: #000;
+}
+
 .totalRow {
     display: flex;
     justify-content: space-between;

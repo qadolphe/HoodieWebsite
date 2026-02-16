@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@mediapipe/tasks-vision": "^0.10.32",
-    "@swatbloc/sdk": "^1.4.2",
+    "@swatbloc/sdk": "^1.4.4",
     "dotenv": "^17.2.3",
     "framer-motion": "^12.23.24",
     "lucide-react": "^0.555.0",

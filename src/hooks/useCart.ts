@@ -13,6 +13,7 @@ export interface CartItem {
   slug: string
   size?: string
   variantId?: string
+  metadata?: Record<string, unknown>
 }
 
 interface CartStore {
