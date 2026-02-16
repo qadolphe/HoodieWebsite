@@ -21,7 +21,7 @@ export default function Footer() {
                             <h4 className={styles.subheading}>Shop</h4>
                             <ul className={styles.list}>
                                 <li><Link href="/products/kits">DIY Kits</Link></li>
-                                <li><Link href="/services/mail-in-service">Mail-in Service</Link></li>
+                                <li><Link href="/services/standard-mail-in-service">Mail-in Service</Link></li>
                                 <li><Link href="/products">All Products</Link></li>
                             </ul>
                         </div>

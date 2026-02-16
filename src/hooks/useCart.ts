@@ -1,6 +1,20 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
+function matchesCartItem(i: CartItem, id: string, size?: string, variantId?: string) {
+  if (i.id !== id) return false
+
+  if (variantId) {
+    return i.variantId === variantId
+  }
+
+  if (size) {
+    return i.size === size && !i.variantId
+  }
+
+  return !i.variantId && !i.size
+}
+
 // Define what a "Product" looks like in your cart
 export interface CartItem {
   id: string
@@ -46,10 +60,8 @@ export const useCart = create<CartStore>()(
       addItem: (newItem) => set((state) => {
         // Uniqueness check: Match ID AND (VariantID OR Size)
         // If variantId is present, match on that. If not, match on size.
-        const existingItem = state.items.find((i) => 
-          i.id === newItem.id && 
-          ((newItem.variantId && i.variantId === newItem.variantId) || 
-           (!newItem.variantId && i.size === newItem.size))
+        const existingItem = state.items.find((i) =>
+          matchesCartItem(i, newItem.id, newItem.size, newItem.variantId)
         )
 
         if (existingItem) {
@@ -68,31 +80,18 @@ export const useCart = create<CartStore>()(
       }),
 
       removeItem: (id, size, variantId) => set((state) => ({
-        items: state.items.filter((i) => {
-            if (i.id !== id) return true;
-            if (variantId && i.variantId === variantId) return false;
-            if (!variantId && size && i.size === size) return false;
-            return true;
-        }),
+        items: state.items.filter((i) => !matchesCartItem(i, id, size, variantId)),
       })),
 
       updateQuantity: (id, quantity, size, variantId) => set((state) => {
         if (quantity <= 0) {
             return {
-                items: state.items.filter((i) => {
-                    if (i.id !== id) return true;
-                    if (variantId && i.variantId === variantId) return false;
-                    if (!variantId && size && i.size === size) return false;
-                    return true;
-                })
+            items: state.items.filter((i) => !matchesCartItem(i, id, size, variantId))
             }
         }
         return {
             items: state.items.map((i) => {
-                const match = i.id === id && (
-                    (variantId && i.variantId === variantId) || 
-                    (!variantId && size && i.size === size)
-                );
+            const match = matchesCartItem(i, id, size, variantId)
                 return match ? { ...i, quantity } : i;
             }),
         }

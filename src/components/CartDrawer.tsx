@@ -2,7 +2,7 @@
 
 import { useCart } from '@/hooks/useCart'
 import { AnimatePresence, motion } from 'framer-motion'
-import { X, ShoppingBag, Minus, Plus, ShieldCheck } from 'lucide-react'
+import { X, ShoppingBag, Minus, Plus } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import styles from './CartDrawer.module.css'
@@ -11,12 +11,99 @@ import { usePathname } from 'next/navigation'
 import AnimatedCounter from './AnimatedCounter'
 import { swat } from '@/lib/swatbloc'
 import { INSURANCE_VARIANT_IDS, PRODUCT_IDS } from '@/lib/constants'
+import InsuranceSelectionModal from './InsuranceSelectionModal'
 
 export default function CartDrawer() {
     const { isOpen, closeCart, items, removeItem, updateQuantity, totalPrice, addItem } = useCart()
     const [isLoading, setIsLoading] = useState(false)
     const [mounted, setMounted] = useState(false)
+    const [activeInsuranceRowKey, setActiveInsuranceRowKey] = useState<string | null>(null)
     const pathname = usePathname()
+
+    const rowKeyFor = (item: { id: string; variantId?: string; size?: string }) => `${item.id}-${item.variantId || item.size || 'default'}`
+
+    const insuranceItems = items.filter((item) => item.id === PRODUCT_IDS.MAIL_IN_INSURANCE)
+    const visibleItems = items.filter((item) => item.id !== PRODUCT_IDS.MAIL_IN_INSURANCE)
+
+    const insuranceCountsForRow = (rowKey: string, productId: string) => {
+        const basic = insuranceItems
+            .filter((ins) => {
+                if (ins.variantId !== INSURANCE_VARIANT_IDS.BASIC) return false
+                const metadata = ins.metadata as Record<string, unknown> | undefined
+                const linkedRow = metadata?.covers_row_key as string | undefined
+                const linkedProduct = metadata?.covers_item_ref as string | undefined
+                if (linkedRow) return linkedRow === rowKey
+                return linkedProduct === productId
+            })
+            .reduce((sum, ins) => sum + ins.quantity, 0)
+
+        const standard = insuranceItems
+            .filter((ins) => {
+                if (ins.variantId !== INSURANCE_VARIANT_IDS.STANDARD) return false
+                const metadata = ins.metadata as Record<string, unknown> | undefined
+                const linkedRow = metadata?.covers_row_key as string | undefined
+                const linkedProduct = metadata?.covers_item_ref as string | undefined
+                if (linkedRow) return linkedRow === rowKey
+                return linkedProduct === productId
+            })
+            .reduce((sum, ins) => sum + ins.quantity, 0)
+
+        return { basic, standard }
+    }
+
+    const applyInsuranceForRow = (
+        rowKey: string,
+        desiredBasicCount: number,
+        desiredStandardCount: number,
+        existingBasicCount: number,
+        existingStandardCount: number
+    ) => {
+        const syncTier = (
+            variantId: string,
+            desiredQuantity: number,
+            existingQuantity: number,
+            priceCents: number,
+            title: string
+        ) => {
+            if (desiredQuantity > existingQuantity) {
+                addItem({
+                    id: PRODUCT_IDS.MAIL_IN_INSURANCE,
+                    name: title,
+                    price: priceCents,
+                    quantity: desiredQuantity - existingQuantity,
+                    type: 'service',
+                    slug: 'mail-in-service-protection-plan',
+                    variantId,
+                    metadata: {
+                        covers_item_ref: PRODUCT_IDS.MAIL_IN_SERVICE,
+                        covers_row_key: rowKey,
+                        coverage_type: 'loss_and_damage'
+                    }
+                })
+                return
+            }
+
+            if (desiredQuantity < existingQuantity) {
+                updateQuantity(PRODUCT_IDS.MAIL_IN_INSURANCE, desiredQuantity, undefined, variantId)
+            }
+        }
+
+        syncTier(
+            INSURANCE_VARIANT_IDS.BASIC,
+            desiredBasicCount,
+            existingBasicCount,
+            400,
+            'Mail-In Protection (Basic • Up to $50)'
+        )
+
+        syncTier(
+            INSURANCE_VARIANT_IDS.STANDARD,
+            desiredStandardCount,
+            existingStandardCount,
+            800,
+            'Mail-In Protection (Standard • Up to $100)'
+        )
+    }
 
     useEffect(() => {
         setMounted(true)
@@ -60,42 +147,6 @@ export default function CartDrawer() {
         }
     }
 
-    const mailInServiceItem = items.find((item) => item.id === PRODUCT_IDS.MAIL_IN_SERVICE)
-    const hasInsurance = items.some((item) => item.id === PRODUCT_IDS.MAIL_IN_INSURANCE)
-
-    // Phase 3 requirement: tiering is based on physical cart value
-    const physicalCartValueCents = items.reduce((sum, item) => {
-        if (item.type !== 'kit') return sum
-        return sum + item.price * item.quantity
-    }, 0)
-
-    const suggestedInsuranceVariantId = physicalCartValueCents > 5000
-        ? INSURANCE_VARIANT_IDS.STANDARD
-        : INSURANCE_VARIANT_IDS.BASIC
-
-    const suggestedInsurancePriceCents = suggestedInsuranceVariantId === INSURANCE_VARIANT_IDS.STANDARD ? 800 : 400
-    const suggestedInsuranceName = suggestedInsuranceVariantId === INSURANCE_VARIANT_IDS.STANDARD
-        ? 'Mail-In Protection (Standard • Up to $100)'
-        : 'Mail-In Protection (Basic • Up to $50)'
-
-    const handleAddInsurance = async () => {
-        if (!mailInServiceItem) return
-
-        addItem({
-            id: PRODUCT_IDS.MAIL_IN_INSURANCE,
-            name: suggestedInsuranceName,
-            price: suggestedInsurancePriceCents,
-            quantity: 1,
-            type: 'service',
-            slug: 'mail-in-service-protection-plan',
-            variantId: suggestedInsuranceVariantId,
-            metadata: {
-                covers_item_ref: mailInServiceItem.id,
-                coverage_type: 'loss_and_damage'
-            }
-        })
-    }
-
     // Prevent body scroll when cart is open
     useEffect(() => {
         if (isOpen) {
@@ -132,13 +183,13 @@ export default function CartDrawer() {
                         className={styles.drawer}
                     >
                         <div className={styles.header}>
-                            <h2 className={styles.title}>Your Cart ({items.length})</h2>
+                            <h2 className={styles.title}>Your Cart ({visibleItems.length})</h2>
                             <button onClick={closeCart} className={styles.closeBtn}>
                                 <X size={24} />
                             </button>
                         </div>
 
-                        {items.length === 0 ? (
+                        {visibleItems.length === 0 ? (
                             <div className={styles.emptyState}>
                                 <ShoppingBag size={48} />
                                 <p>Your cart is empty</p>
@@ -146,7 +197,12 @@ export default function CartDrawer() {
                         ) : (
                             <div className={styles.itemsList}>
                                 <AnimatePresence initial={false} mode="popLayout">
-                                    {items.map((item) => (
+                                    {visibleItems.map((item) => {
+                                        const rowKey = rowKeyFor(item)
+                                        const { basic: linkedBasicCount, standard: linkedStandardCount } = insuranceCountsForRow(rowKey, item.id)
+                                        const hasLinkedInsurance = linkedBasicCount + linkedStandardCount > 0
+
+                                        return (
                                         <motion.div
                                             key={`${item.id}-${item.variantId || item.size || 'default'}`}
                                             layout
@@ -184,6 +240,15 @@ export default function CartDrawer() {
                                                     <p className={styles.itemPrice}>
                                                         ${(item.price / 100).toFixed(2)}
                                                     </p>
+
+                                                    {item.id === PRODUCT_IDS.MAIL_IN_SERVICE && (
+                                                        <button
+                                                            className={`${styles.insuranceBtn} ${hasLinkedInsurance ? styles.insuranceBtnActive : ''}`}
+                                                            onClick={() => setActiveInsuranceRowKey(rowKey)}
+                                                        >
+                                                            {hasLinkedInsurance ? 'Edit Insurance' : 'Add Insurance'}
+                                                        </button>
+                                                    )}
                                                 </div>
                                                 <div className={styles.itemMeta}>
                                                     <div className={styles.quantityControls}>
@@ -212,33 +277,13 @@ export default function CartDrawer() {
                                                 </div>
                                             </div>
                                         </motion.div>
-                                    ))}
+                                    )})}
                                 </AnimatePresence>
                             </div>
                         )}
 
-                        {items.length > 0 && (
+                        {visibleItems.length > 0 && (
                             <div className={styles.footer}>
-                                {mailInServiceItem && !hasInsurance && (
-                                    <div className={styles.upsellCard}>
-                                        <div className={styles.upsellHeader}>
-                                            <ShieldCheck size={16} />
-                                            <span>Protect your mail-in order</span>
-                                        </div>
-                                        <p className={styles.upsellDescription}>
-                                            {suggestedInsuranceVariantId === INSURANCE_VARIANT_IDS.STANDARD
-                                                ? 'Standard Tier: Up to $100 coverage for hoodie loss/damage.'
-                                                : 'Basic Tier: Up to $50 coverage or service-fee refund.'}
-                                        </p>
-                                        <button
-                                            className={styles.upsellButton}
-                                            onClick={handleAddInsurance}
-                                        >
-                                            Add Protection • ${(suggestedInsurancePriceCents / 100).toFixed(2)}
-                                        </button>
-                                    </div>
-                                )}
-
                                 <div className={styles.totalRow}>
                                     <span>Total</span>
                                     <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -255,6 +300,36 @@ export default function CartDrawer() {
                                 </button>
                             </div>
                         )}
+
+                        {activeInsuranceRowKey && (() => {
+                            const serviceRow = visibleItems.find((item) => rowKeyFor(item) === activeInsuranceRowKey)
+                            if (!serviceRow || serviceRow.id !== PRODUCT_IDS.MAIL_IN_SERVICE) return null
+
+                            const { basic, standard } = insuranceCountsForRow(activeInsuranceRowKey, serviceRow.id)
+
+                            return (
+                                <InsuranceSelectionModal
+                                    isOpen
+                                    quantity={serviceRow.quantity}
+                                    initialBasicCount={basic}
+                                    initialStandardCount={standard}
+                                    title="Mail-In Insurance"
+                                    subtitle="Select coverage for each item in this service row."
+                                    confirmLabel="Save Changes"
+                                    onClose={() => setActiveInsuranceRowKey(null)}
+                                    onConfirm={({ basicCount, standardCount }) => {
+                                        applyInsuranceForRow(
+                                            activeInsuranceRowKey,
+                                            basicCount,
+                                            standardCount,
+                                            basic,
+                                            standard
+                                        )
+                                        setActiveInsuranceRowKey(null)
+                                    }}
+                                />
+                            )
+                        })()}
                     </motion.div>
                 </>
             )}

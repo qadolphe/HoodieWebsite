@@ -11,7 +11,8 @@ interface Props {
 
 async function getProduct(slug: string): Promise<Product | null> {
     try {
-        const data: any = await swat.products.get(slug)
+        const normalizedSlug = slug === 'mail-in-service' ? 'standard-mail-in-service' : slug
+        const data: any = await swat.products.get(normalizedSlug)
         return mapSDKProduct(data) as Product
     } catch (error) {
         console.error(`Error fetching service product (${slug}):`, error)

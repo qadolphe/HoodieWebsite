@@ -108,6 +108,31 @@
     font-size: 0.9rem;
 }
 
+.insuranceBtn {
+    margin-top: 0.45rem;
+    border: 1px solid rgba(192, 132, 252, 0.6);
+    background: rgba(192, 132, 252, 0.08);
+    color: #f3e8ff;
+    border-radius: 9999px;
+    padding: 0.32rem 0.6rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.insuranceBtn:hover {
+    background: #c084fc;
+    color: #000;
+}
+
+.insuranceBtnActive {
+    border-color: rgba(212, 133, 255, 0.95);
+    background: rgba(212, 133, 255, 0.2);
+}
+
 .itemMeta {
     display: flex;
     align-items: center;

@@ -79,7 +79,7 @@ export default function ProductsPage() {
                                 overrideTitle = 'Mail-In'
                                 overrideDescription = 'Send us your favorite hoodie, and we\'ll professionally line it with premium satin.'
                                 overrideButtonText = 'How it Works'
-                                overrideLink = '/services/mail-in-service'
+                                overrideLink = '/services/standard-mail-in-service'
                             } else if (item.id === PRODUCT_IDS.CONCIERGE_SERVICE) {
                                 overrideTitle = 'Concierge'
                                 overrideDescription = 'Don\'t have a hoodie? We\'ll buy one for you, line it, and ship the finished piece.'

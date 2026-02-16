@@ -61,7 +61,7 @@ export default function Home() {
           <p className={styles.heroSubtitle}>The premium satin lining solution for your favorite hoodies.</p>
           <div className={styles.forkContainer}>
             <Link href="/products/kits" className={styles.primaryButton}>Shop DIY Kits</Link>
-            <Link href="/services/mail-in-service" className={styles.secondaryButton}>How Mail-In Works</Link>
+            <Link href="/services/standard-mail-in-service" className={styles.secondaryButton}>How Mail-In Works</Link>
           </div>
         </div>
       </section>
@@ -146,7 +146,7 @@ export default function Home() {
                 overrideTitle = 'Mail-In'
                 overrideDescription = 'Send us your favorite hoodie, and we\'ll professionally line it with premium satin.'
                 overrideButtonText = 'How it Works'
-                overrideLink = '/services/mail-in-service'
+                overrideLink = '/services/standard-mail-in-service'
               } else if (item.id === PRODUCT_IDS.CONCIERGE_SERVICE) {
                 overrideTitle = 'Concierge'
                 overrideDescription = 'Don\'t have a hoodie? We\'ll buy one for you, line it, and ship the finished piece.'
