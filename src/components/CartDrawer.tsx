@@ -276,7 +276,21 @@ export default function CartDrawer() {
                                                         </button>
                                                     </div>
                                                     <button
-                                                        onClick={() => removeItem(item.id, item.size, item.variantId)}
+                                                        onClick={() => {
+                                                            removeItem(item.id, item.size, item.variantId)
+                                                            // Also remove any linked insurance for this row
+                                                            if (item.id === PRODUCT_IDS.MAIL_IN_SERVICE) {
+                                                                const rowKey = rowKeyFor(item)
+                                                                // Find insurance items linked to this row
+                                                                items.filter(i => {
+                                                                    const meta = i.metadata as any
+                                                                    return i.id === PRODUCT_IDS.MAIL_IN_INSURANCE && 
+                                                                           meta?.covers_row_key === rowKey
+                                                                }).forEach(ins => {
+                                                                    removeItem(ins.id, ins.size, ins.variantId)
+                                                                })
+                                                            }
+                                                        }}
                                                         className={styles.removeBtn}
                                                     >
                                                         Remove

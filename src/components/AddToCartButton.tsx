@@ -42,6 +42,11 @@ export default function AddToCartButton({ product, className }: AddToCartButtonP
     }
 
     const handleAddToCart = () => {
+        if (isMailInService) {
+            setShowInsuranceModal(true)
+            return
+        }
+
         addItem({
             id: product.id,
             name: product.name,
@@ -50,17 +55,24 @@ export default function AddToCartButton({ product, className }: AddToCartButtonP
             image: product.image_url || undefined,
             type: product.type,
             slug: product.slug
-        }, { openCart: !isMailInService })
-
-        if (isMailInService) {
-            setShowInsuranceModal(true)
-        }
+        }, { openCart: true })
 
         setIsAdded(true)
         setTimeout(() => setIsAdded(false), 2000)
     }
 
     const handleInsuranceConfirm = ({ basicCount, standardCount }: { basicCount: number; standardCount: number }) => {
+        // Add the main product first
+        addItem({
+            id: product.id,
+            name: product.name,
+            price: Math.round(product.base_price * 100),
+            quantity: selectedQuantity,
+            image: product.image_url || undefined,
+            type: product.type,
+            slug: product.slug
+        }, { openCart: false })
+
         addInsuranceTier(
             INSURANCE_VARIANT_IDS.BASIC,
             basicCount,
@@ -77,6 +89,9 @@ export default function AddToCartButton({ product, className }: AddToCartButtonP
 
         setShowInsuranceModal(false)
         openCart()
+        
+        setIsAdded(true)
+        setTimeout(() => setIsAdded(false), 2000)
     }
 
     return (
