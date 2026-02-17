@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import Link from 'next/link'
 import styles from './InsuranceSelectionModal.module.css'
 
 type CoverageTier = 'none' | 'basic' | 'standard'
@@ -30,6 +29,7 @@ export default function InsuranceSelectionModal({
     onConfirm
 }: InsuranceSelectionModalProps) {
     const [rows, setRows] = useState<CoverageTier[]>([])
+    const [showTerms, setShowTerms] = useState(false)
 
     useEffect(() => {
         if (!isOpen) return
@@ -67,6 +67,10 @@ export default function InsuranceSelectionModal({
         const totalCents = basicCount * 400 + standardCount * 800
         return { basicCount, standardCount, totalCents }
     }, [rows])
+
+    const primaryButtonLabel = summary.totalCents === 0
+        ? 'Continue without protection'
+        : confirmLabel
 
     if (!isOpen) return null
 
@@ -115,12 +119,28 @@ export default function InsuranceSelectionModal({
                 </div>
 
                 <div className={styles.actions}>
-                    <Link href="/terms" className={styles.termsBtn}>
-                        Terms
-                    </Link>
-                    <button className={styles.confirmBtn} onClick={() => onConfirm(summary)}>
-                        {confirmLabel}
+                    <button
+                        type="button"
+                        className={styles.termsBtn}
+                        onClick={() => setShowTerms((v) => !v)}
+                    >
+                        {showTerms ? 'Hide Terms' : 'View Terms'}
                     </button>
+                    <button className={styles.confirmBtn} onClick={() => onConfirm(summary)}>
+                        {primaryButtonLabel}
+                    </button>
+                </div>
+
+                <div className={`${styles.termsPanel} ${showTerms ? styles.termsPanelOpen : ''}`}>
+                    <div className={styles.termsContent}>
+                        <h4>Protection Terms (Summary)</h4>
+                        <ul>
+                            <li>Basic: up to $50 coverage for eligible loss or damage.</li>
+                            <li>Standard: up to $100 coverage for eligible loss or damage.</li>
+                            <li>Coverage applies to the declared mail-in service item(s).</li>
+                            <li>Claim outcomes may include reimbursement or service refund where applicable.</li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>

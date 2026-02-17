@@ -201,6 +201,7 @@ export default function CartDrawer() {
                                         const rowKey = rowKeyFor(item)
                                         const { basic: linkedBasicCount, standard: linkedStandardCount } = insuranceCountsForRow(rowKey, item.id)
                                         const hasLinkedInsurance = linkedBasicCount + linkedStandardCount > 0
+                                        const linkedInsuranceCents = linkedBasicCount * 400 + linkedStandardCount * 800
 
                                         return (
                                         <motion.div
@@ -240,6 +241,12 @@ export default function CartDrawer() {
                                                     <p className={styles.itemPrice}>
                                                         ${(item.price / 100).toFixed(2)}
                                                     </p>
+
+                                                    {item.id === PRODUCT_IDS.MAIL_IN_SERVICE && linkedInsuranceCents > 0 && (
+                                                        <p className={styles.insuranceMeta}>
+                                                            Insurance: +${(linkedInsuranceCents / 100).toFixed(2)}
+                                                        </p>
+                                                    )}
 
                                                     {item.id === PRODUCT_IDS.MAIL_IN_SERVICE && (
                                                         <button

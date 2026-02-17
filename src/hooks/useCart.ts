@@ -37,7 +37,7 @@ interface CartStore {
   setHasHydrated: (state: boolean) => void
   openCart: () => void
   closeCart: () => void
-  addItem: (item: CartItem) => void
+  addItem: (item: CartItem, options?: { openCart?: boolean }) => void
   removeItem: (id: string, size?: string, variantId?: string) => void
   updateQuantity: (id: string, quantity: number, size?: string, variantId?: string) => void
   clearCart: () => void
@@ -57,7 +57,8 @@ export const useCart = create<CartStore>()(
       openCart: () => set({ isOpen: true }),
       closeCart: () => set({ isOpen: false }),
       
-      addItem: (newItem) => set((state) => {
+      addItem: (newItem, options) => set((state) => {
+        const shouldOpenCart = options?.openCart ?? true
         // Uniqueness check: Match ID AND (VariantID OR Size)
         // If variantId is present, match on that. If not, match on size.
         const existingItem = state.items.find((i) =>
@@ -70,12 +71,12 @@ export const useCart = create<CartStore>()(
             items: state.items.map((i) =>
               i === existingItem ? { ...i, quantity: i.quantity + newItem.quantity } : i
             ),
-            isOpen: true
+            isOpen: shouldOpenCart ? true : state.isOpen
           }
         }
         return { 
             items: [...state.items, { ...newItem }],
-            isOpen: true
+            isOpen: shouldOpenCart ? true : state.isOpen
         }
       }),
 

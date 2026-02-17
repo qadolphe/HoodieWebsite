@@ -13,6 +13,7 @@ interface AddToCartButtonProps {
 
 export default function AddToCartButton({ product, className }: AddToCartButtonProps) {
     const addItem = useCart((state) => state.addItem)
+    const openCart = useCart((state) => state.openCart)
     const [isAdded, setIsAdded] = useState(false)
     const [showInsuranceModal, setShowInsuranceModal] = useState(false)
     const [selectedQuantity, setSelectedQuantity] = useState(1)
@@ -37,7 +38,7 @@ export default function AddToCartButton({ product, className }: AddToCartButtonP
             slug: 'mail-in-service-protection-plan',
             variantId,
             metadata
-        })
+        }, { openCart: false })
     }
 
     const handleAddToCart = () => {
@@ -49,7 +50,7 @@ export default function AddToCartButton({ product, className }: AddToCartButtonP
             image: product.image_url || undefined,
             type: product.type,
             slug: product.slug
-        })
+        }, { openCart: !isMailInService })
 
         if (isMailInService) {
             setShowInsuranceModal(true)
@@ -75,6 +76,7 @@ export default function AddToCartButton({ product, className }: AddToCartButtonP
         )
 
         setShowInsuranceModal(false)
+        openCart()
     }
 
     return (
@@ -119,7 +121,10 @@ export default function AddToCartButton({ product, className }: AddToCartButtonP
                     title="Protect Your New Mail-In Item(s)"
                     subtitle="This prompt applies only to the service quantity you just added."
                     confirmLabel="Add Selected Protection"
-                    onClose={() => setShowInsuranceModal(false)}
+                    onClose={() => {
+                        setShowInsuranceModal(false)
+                        openCart()
+                    }}
                     onConfirm={handleInsuranceConfirm}
                 />
             )}
